@@ -1,0 +1,22 @@
+---
+title: "Rf2pval"
+author: "Tyler Kolisnik"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Rf2pval}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+\documentclass[11pt]{article}
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+\begin{abstract}
+  In this vignette, we demonstrate the \Rpackage{gage} package for gene set (enrichment or GSEA) or pathway analysis. The \Rpackage{gage} package implement the GAGE method. GAGE is generally applicable independent of microarray and RNA-Seq data attributes including sample sizes, experimental designs, assay platforms, and other types of heterogeneity, and consistently achieves superior performance over other frequently used methods. We introduce functions and data for routine and advanced gene set (enrichment) analysis, as well as results presentation and interpretation. We also cover package installation, data preparation and common application errors. Two secondary vignettes, \href{http://bioconductor.org/packages/release/bioc/vignettes/gage/inst/doc/dataPrep.pdf}{"Gene set and data preparation"} and \href{http://bioconductor.org/packages/release/bioc/vignettes/gage/inst/doc/RNA-seqWorkflow.pdf}{"RNA-Seq Data Pathway and Gene-set Analysis Workflows"}, demonstrate more applications and usages of GAGE.
+\end{abstract}
+\end{document}
