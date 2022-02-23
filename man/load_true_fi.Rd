@@ -2,7 +2,8 @@
 % Please edit documentation in R/loadDatasets.R
 \name{load_true_fi}
 \alias{load_true_fi}
-\title{Load feature importance scores for true data}
+\title{Load feature importance scores for true data
+This function loads the first random forest results file}
 \usage{
 load_true_fi(pathtofile, featureImportanceColumnName, featureRankColumnName)
 }
@@ -17,5 +18,6 @@ load_true_fi(pathtofile, featureImportanceColumnName, featureRankColumnName)
 A tibble containing all of the feature importance score data for the true (observed) dataset.
 }
 \description{
+Load feature importance scores for true data
 This function loads the first random forest results file
 }

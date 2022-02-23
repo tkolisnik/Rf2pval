@@ -6,8 +6,8 @@
 calculateQuantiles<-function(truevalues,permutedvalues){
   dm <- permutedvalues %>% group_by(featureRank) %>%
   summarise(mean = mean(featureImportance),
-            lower = quantile(featureImportance, prob=.025),
-            upper = quantile(featureImportance, prob=.975)) %>%
+            lower = stats::quantile(featureImportance, prob=.025),
+            upper = stats::quantile(featureImportance, prob=.975)) %>%
             mutate(observed = truevalues$featureImportance) %>%
             mutate(logmean=log(mean)) %>%
             mutate(logupper=log(upper)) %>%
@@ -44,7 +44,7 @@ calculatePvalueforSet<-function(permutedvalues,quantiledata){
 #' @return A dataframe of featureRanks, proportions and pvalues
 #' @export
 calculatePvalueforRank<-function(truevalues,permutedvalues,quantiledata){
-  fweights <- aggregate(featureImportance~featureRank, permutedvalues, 'c')
+  fweights <- stats::aggregate(featureImportance~featureRank, permutedvalues, 'c')
   fweights2 <- fweights %>% mutate(observedmean=truevalues$featureImportance)
   fweights3 <- fweights2 %>% mutate(proportion=rowSums(fweights2$featureImportance > fweights2$observedmean,na.rm = TRUE)) %>% mutate(pvalue=(proportion/100))
   fweightPvals <- fweights3[,c("featureRank","proportion","pvalue")]

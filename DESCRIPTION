@@ -11,7 +11,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports:
   dplyr,
-  tidyverse
+  tidyverse,
+  stats,
+  readr
 Suggests: 
     rmarkdown,
     knitr

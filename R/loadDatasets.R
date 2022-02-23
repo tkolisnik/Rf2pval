@@ -1,8 +1,7 @@
 
+
 #' Load feature importance scores for true data
-#'
 #' This function loads the first random forest results file
-#'
 #' @param pathtofile Path to the input file. Input file must be in .csv format as a table of feature importance scores or Gini Importance scores for each named feature. Must have a minimum of two columns, one named featurename and another named featureImportance.
 #' @param featureImportanceColumnName The name of the column in the input .csv file which contains the feature importance scores.
 #' @param featureRankColumnName The name of the column in the input .csv file which contains the ordered feature ranks. Option: enter "rownames" if the rank is stored as the rownames. Feature ranks should start at 1.
@@ -33,7 +32,7 @@ load_true_fi <- function(pathtofile,featureImportanceColumnName,featureRankColum
 #' Load feature importance scores for permuted data
 #'
 #' This function loads the first random forest results files for the 100 randomized outcome variable null permutations
-#'
+
 #' @param pathtofile Path to a folder containing minimum 100 csv files (one for each null permutation). Input files must be in .csv format as a table of feature importance scores or Gini Importance scores for each named feature. Must have a minimum of two columns, one named featurename and another named featureImportance. The true non-randomized data .csv file must NOT be in this folder.
 #' @param featureImportanceColumnName The name of the column in the input .csv file which contains the feature importance scores.
 #' @param featureRankColumnName The name of the column in the input .csv file which contains the ordered feature ranks. Option: enter "rownames" if the rank is stored as the rownames. Feature ranks should start at 1.
