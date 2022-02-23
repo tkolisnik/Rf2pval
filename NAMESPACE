@@ -3,7 +3,7 @@
 export(calculatePvalueforRank)
 export(calculatePvalueforSet)
 export(calculateQuantiles)
-export(load_permutated_fws)
+export(load_permuted_fws)
 export(load_true_fws)
 export(logWeightRankPlot)
 export(piHistogram)

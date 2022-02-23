@@ -6,10 +6,10 @@
 \alias{Rf2pval-package}
 \title{Rf2pval: Calculate P-values and cutoffs for Random Forest Classifier Results}
 \description{
-This package facilitates the calculation of p-values after you have generated results for a minimum of 1 'true' random forest results classifier generation run, and 100 (more the better, wouldn't recommend less) permutated results random forest classifier generation runs, in which the outcome variable of your random forest metadata is randomized differently for each run. This allows for the creation of a 'null dataset' which we can then use to calculate a p-value from using the 'true dataset'. P values can be provided for each individual feature or the feature set as a whole.
+This package facilitates the calculation of p-values after you have generated results for a minimum of 1 'true' random forest results classifier generation run, and 100 (more the better, wouldn't recommend less) permuted results random forest classifier generation runs, in which the outcome variable of your random forest metadata is randomized differently for each run. This allows for the creation of a 'null dataset' which we can then use to calculate a p-value from using the 'true dataset'. P values can be provided for each individual feature or the feature set as a whole.
 }
 \details{
-This package contains a series of functions which help obtain p-values from Random Forest generated gini importance scores.The functions must be used in order. The format of the input dataframes is critical.
+This package contains a series of functions which help obtain p-values from Random Forest generated feature importance scores.The functions must be used in order. The format of the input dataframes is critical.
 www.github.com/tkolisnik/Rf2pval
 }
 \author{
