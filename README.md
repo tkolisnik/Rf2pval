@@ -8,6 +8,8 @@ This package is compatible with any random forest model that produces gini impur
 The method used to calculate p-values in this package is rank and permutation based. Before running this package you must permute your random forest model a recommended minimum of 100 times by randomizing the outcome variables, and obtain feature importance scores for each permutation. This provides us with data that can be used to generate a null-distribution in from which to calculate rank-based p-values with. 
 This package contains a series of 7 functions that are meant to be run in sequential order.
 
+<img width="1154" alt="Screen Shot 2022-02-27 at 5 43 17 PM" src="https://user-images.githubusercontent.com/8935420/155911314-d9c331fd-5c8e-4653-926a-ae02b0a9c07e.png">
+
 Notes:
 The input files must be in a particular format and must be .csv
 
@@ -70,3 +72,4 @@ fiRankPlot(permutedvalues=perm_val,quantiledata=q_val,xlimitmin=0,xlimitmax=241,
 
 #with Log enabled (recommended)
 fiRankPlot(permutedvalues=perm_val,quantiledata=q_val,xlimitmin=0,xlimitmax=250,ylimitmin=-8,ylimitmax=-3.5,labelverticaladjust=1.3,labelhorizontaladjust=-0.02,indvPermScoresOn=FALSE, logOn=TRUE)
+
