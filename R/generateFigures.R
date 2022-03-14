@@ -29,9 +29,9 @@ fiRankPlot<-function(permutedvalues,quantiledata,xlimitmin=0,xlimitmax=500,ylimi
     geom_line() +
     geom_line(aes(x=featureRank, y = logobserved), colour = "gold3") +
     ylim(ylimitmin,ylimitmax) +
-    geom_vline(xintercept = which(qdata2$logobserved<qdata2$logupper)[1],color="red") +
+    geom_vline(xintercept = which(qdata2$logobserved<qdata2$logupper)[1]-1,color="red") +
     xlim(xlimitmin,xlimitmax)+
-    annotate(x=which(qdata2$logobserved<qdata2$logupper)[1],y=+Inf,label=paste0("Intersection with Upper Quartile: ",which(qdata2$logobserved<qdata2$logupper)[1]),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label") +
+    annotate(x=which(qdata2$logobserved<qdata2$logupper)[1]-1,y=+Inf,label=paste0("No. Features above alpha threshold: ",which(qdata2$logobserved<qdata2$logupper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label") +
     NULL
   } else {
       q_data<-quantiledata
@@ -49,9 +49,9 @@ fiRankPlot<-function(permutedvalues,quantiledata,xlimitmin=0,xlimitmax=500,ylimi
       geom_line() +
       geom_line(aes(x=featureRank, y = observed), colour = "gold3") +
       ylim(ylimitmin,ylimitmax) +
-      geom_vline(xintercept = which(q_data2$observed<q_data2$upper)[1],color="red") +
+      geom_vline(xintercept = which(q_data2$observed<q_data2$upper)[1]-1,color="red") +
       xlim(xlimitmin,xlimitmax)+
-      annotate(x=which(q_data2$observed<q_data2$upper)[1],y=+Inf,label=paste0("Intersection with Upper Quartile: ",which(q_data2$observed<q_data2$upper)[1]),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label") +
+      annotate(x=which(q_data2$observed<q_data2$upper)[1]-1,y=+Inf,label=paste0("No. Features above alpha threshold: ",which(q_data2$observed<q_data2$upper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label") +
       NULL
   }
 
@@ -73,13 +73,11 @@ piHistogram<-function(permutedvalues,quantiledata){
     d <- d %>% mutate(Mean = rep( quantiledata$mean, times = numberofPermutations) ) %>% mutate(Dev = featureImportance - Mean)
     pi_permuted <- d %>% group_by(permutation) %>% summarise(Sum_abs_deviations = sum(abs(Dev)))
     pi_obs<-sum(abs(quantiledata$observed - quantiledata$mean))
-    outplot<-pi_permuted %>%
-      ggplot(aes(x = Sum_abs_deviations)) +
+      ggplot(pi_permuted,aes(x = Sum_abs_deviations)) +
       geom_histogram(bins=numberofPermutations) +
       xlab("Sum of Absolute Deviations")+
       ylab("Count")+
       geom_vline(xintercept = pi_obs,color="red") +
       annotate(x=pi_obs,y=+Inf,label=paste0("pi_obs: ",round(pi_obs,2)),vjust=2,hjust=1.2,geom="label") +
       NULL
-    outplot
   }
