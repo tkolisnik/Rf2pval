@@ -37,7 +37,7 @@ calculatePvalueforSet<-function(permutedvalues,quantiledata){
   pvalpi<- (1 - mean(pi_permuted$Sum_abs_deviations < pi_obs))
   outdat<-data.frame("Proportion_based_P-value_for_entire_feature_set"=pvalpi)
   outdat
-  print(paste0("The proportion based p-value for the entire feature set:",p_val_set[,1]))
+  print(paste0("The proportion based p-value for the entire feature set:",outdat[,1]))
 }
 
 #' Calculate P value for each rank

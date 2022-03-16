@@ -17,7 +17,7 @@ fiRankPlot<-function(permutedvalues,quantiledata,xlimitmin=0,xlimitmax=500,ylimi
   qdata<-quantiledata
   qdata2<- qdata %>% dplyr::filter(mean > 0) %>% dplyr::filter(is.finite(logobserved))
   permdata<-permutedvalues
-  permdata2<-permdata %>% filter(featureRank %in% qdata2$featureRank) %>% filter(is.finite(LogfeatureImportance))
+  permdata2<-permdata %>% dplyr::filter(featureRank %in% qdata2$featureRank) %>% dplyr::filter(is.finite(LogfeatureImportance))
     ggplot2::ggplot(qdata2, aes(x = featureRank, y = logmean)) +
     xlab("Feature Rank")+
     ylab("Feature Importance Score (Log-Scaled)")+
@@ -37,7 +37,7 @@ fiRankPlot<-function(permutedvalues,quantiledata,xlimitmin=0,xlimitmax=500,ylimi
       q_data<-quantiledata
       q_data2<-q_data %>% dplyr::filter(mean > 0) %>% dplyr::filter(observed>0)
       perm_data<-permutedvalues
-      perm_data2 <- perm_data %>% filter(featureRank %in% q_data2$featureRank) %>% filter(featureImportance>0)
+      perm_data2 <- perm_data %>% dplyr::filter(featureRank %in% q_data2$featureRank) %>% dplyr::filter(featureImportance>0)
       ggplot2::ggplot(q_data2, aes(x = featureRank, y = mean)) +
       xlab("Feature Rank")+
       ylab("Feature Importance Score")+
