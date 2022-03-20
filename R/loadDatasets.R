@@ -40,31 +40,32 @@ load_true_fi <- function(pathtofile,featureImportanceColumnName,featureRankColum
 #' @export
 load_permuted_fi <- function(pathtofile,featureImportanceColumnName,featureRankColumnName){
   if(length(list.files(path=pathtofile,pattern=".csv"))>0){
-  allfiles<-list.files(path=pathtofile,pattern=".csv",full.names=TRUE)
-  dd0 = readr::read_csv(allfiles[1],show_col_types = FALSE)
-  if(featureRankColumnName=="rownames"){
-  dd1 = dd0 %>% mutate(permutation = 1) %>% mutate(featureRank=as.numeric(rownames(dd0)))
-  }else{
-    dd1 = dd0 %>% mutate(permutation = 1) %>% mutate(featureRank=as.numeric(featureRankColumnName))
-  }
-  z<-1
-  for (i in allfiles[2:length(allfiles)]){
-    dd1 = dd1
+    allfiles<-list.files(path=pathtofile,pattern=".csv",full.names=TRUE)
+    dd0 = readr::read_csv(allfiles[1],show_col_types = FALSE)
+    permnumb<-1
     if(featureRankColumnName=="rownames"){
-    dd2 = readr::read_csv(i,show_col_types = FALSE) %>% mutate(featureRank=as.numeric(rownames(dd0))) %>% dplyr::mutate(permutation = z)
+      dd1 = dd0 %>% mutate(permutation = permnumb) %>% mutate(featureRank=as.numeric(rownames(dd0)))
     } else {
-    dd2 = readr::read_csv(i,show_col_types = FALSE) %>% mutate(featureRank=as.numeric(featureRankColumnName)) %>% dplyr::mutate(permutation = z)
+      dd1 = dd0 %>% mutate(permutation = permnumb) %>% mutate(featureRank=as.numeric(featureRankColumnName))
     }
-    dd1 = dd1 %>% bind_rows(dd2)
-    z<-z+1
-  }
-  dd1 = dd1 %>% rename(featureImportance= all_of(featureImportanceColumnName))
-  dd1 = dd1 %>% dplyr::mutate(LogfeatureImportance = log(featureImportance))
+    permnumb<-permnumb+1
+    for (i in allfiles[2:length(allfiles)]){
+      dd1 = dd1
+      if(featureRankColumnName=="rownames"){
+        dd2 = readr::read_csv(i,show_col_types = FALSE) %>% mutate(featureRank=as.numeric(rownames(dd0))) %>% dplyr::mutate(permutation = permnumb)
+      } else {
+          dd2 = readr::read_csv(i,show_col_types = FALSE) %>% mutate(featureRank=as.numeric(featureRankColumnName)) %>% dplyr::mutate(permutation = permnumb)
+        }
+     dd1 = dd1 %>% bind_rows(dd2)
+     permnumb<-permnumb+1
+   }
+  dd1 <- dd1 %>% dplyr::rename(featureImportance= dplyr::all_of(featureImportanceColumnName))
+  dd1 <- dd1 %>% dplyr::mutate(LogfeatureImportance = log(featureImportance))
   dd1$featureRank<-dd1$featureRank-1 #necessary to start feature ranking at 0 for plots.
   if(any(is.na(dd1$featureRank))){
     stop("NA's detected in feature rank column ; Please check you used the right column name and try again")
   } else {
-  return(dd1) }
+    return(dd1) }
   }
   else{
     stop("Input file list is either empty or is not .CSV ; Please check and try again")

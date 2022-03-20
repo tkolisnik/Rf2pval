@@ -26,7 +26,7 @@ calculateQuantiles<-function(truevalues,permutedvalues,alpha=0.05){
 #' @export
 calculatePvalueforSet<-function(permutedvalues,quantiledata){
   d<-permutedvalues
-  numberofPermutations<-max(d$permutation)+1
+  numberofPermutations<-max(d$permutation)
   d <- d %>%
     mutate(Mean = rep( quantiledata$mean, times = numberofPermutations) ) %>%
     mutate(Dev = featureImportance - Mean)
