@@ -31,7 +31,7 @@ fiRankPlot<-function(permutedvalues,quantiledata,xlimitmin=0,xlimitmax=500,ylimi
     ylim(ylimitmin,ylimitmax) +
     geom_vline(xintercept = which(qdata2$logobserved<qdata2$logupper)[1]-1,color="red") +
     xlim(xlimitmin,xlimitmax)+
-    annotate(x=which(qdata2$logobserved<qdata2$logupper)[1]-1,y=+Inf,label=paste0("No. Features above alpha threshold: ",which(qdata2$logobserved<qdata2$logupper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label") +
+    annotate(x=which(qdata2$logobserved<qdata2$logupper)[1]-1,y=+Inf,label=paste0("No. Features above \nalpha threshold: ",which(qdata2$logobserved<qdata2$logupper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label",size=3.5) +
     theme_linedraw()+
     NULL
   } else {
@@ -52,7 +52,7 @@ fiRankPlot<-function(permutedvalues,quantiledata,xlimitmin=0,xlimitmax=500,ylimi
       ylim(ylimitmin,ylimitmax) +
       geom_vline(xintercept = which(q_data2$observed<q_data2$upper)[1]-1,color="red") +
       xlim(xlimitmin,xlimitmax)+
-      annotate(x=which(q_data2$observed<q_data2$upper)[1]-1,y=+Inf,label=paste0("No. Features above alpha threshold: ",which(q_data2$observed<q_data2$upper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label") +
+      annotate(x=which(q_data2$observed<q_data2$upper)[1]-1,y=+Inf,label=paste0("No. Features above \nalpha threshold: ",which(q_data2$observed<q_data2$upper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label",size=3.5) +
       theme_linedraw()+
       NULL
   }
