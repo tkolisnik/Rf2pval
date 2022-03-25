@@ -75,7 +75,7 @@ piHistogram<-function(permutedvalues,quantiledata){
     d <- d %>% mutate(Mean = rep( quantiledata$mean, times = numberofPermutations) ) %>% mutate(Dev = featureImportance - Mean)
     pi_permuted <- d %>% group_by(permutation) %>% summarise(Sum_abs_deviations = sum(abs(Dev)))
     pi_obs<-sum(abs(quantiledata$observed - quantiledata$mean))
-      ggplot(pi_permuted,aes(x = Sum_abs_deviations)) +
+      ggplot2::ggplot(pi_permuted,aes(x = Sum_abs_deviations)) +
       geom_histogram(bins=numberofPermutations) +
       xlab("Sum of Absolute Deviations")+
       ylab("Count")+
@@ -101,7 +101,7 @@ piECDF<-function(permutedvalues,quantiledata){
   d2 <- d1 %>% mutate(Mean = rep( quantiledata$mean, times = numberofPermutations) ) %>% mutate(Dev = featureImportance - Mean)
   pi_permuted <- d2 %>% group_by(permutation) %>% summarise(Sum_abs_deviations = sum(abs(Dev)))
   pi_obs<-sum(abs(quantiledata$observed - quantiledata$mean))
-  ggplot(pi_permuted,aes(x = Sum_abs_deviations)) +
+  ggplot2::ggplot(pi_permuted,aes(x = Sum_abs_deviations)) +
     stat_ecdf(geom = "step")+
     geom_vline(xintercept = pi_obs,color="red") +
     annotate(x=pi_obs,y=+Inf,label=paste0("pi_obs: ",round(pi_obs,2)),vjust=4,hjust=1.1,geom="label") +

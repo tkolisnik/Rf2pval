@@ -1,5 +1,3 @@
-
-
 #' Load feature importance scores for true data
 #' This function loads the first random forest results file
 #' @param pathtofile Path to the input file. Input file must be in .csv format as a table of feature importance scores or Gini Importance scores for each named feature. Must have a minimum of two columns, one named featurename and another named featureImportance.
@@ -11,11 +9,11 @@ load_true_fi <- function(pathtofile,featureImportanceColumnName,featureRankColum
   if(grepl("\\.csv$", pathtofile)){
   d0 <- readr::read_csv(pathtofile,show_col_types=FALSE)
   if(featureRankColumnName=="rownames"){
-  d2 <- d0 %>% dplyr::mutate(permutation = 0) %>% mutate(featureRank=as.numeric(rownames(d0))) %>% rename(featureImportance= all_of(featureImportanceColumnName))
+  d2 <- d0 %>% dplyr::mutate(permutation = 0) %>% dplyr::mutate(featureRank=as.numeric(rownames(d0))) %>% dplyr::rename(featureImportance= dplyr::all_of(featureImportanceColumnName))
   }else{
-  d2 <- d0 %>% dplyr::mutate(permutation = 0) %>% mutate(featureRank=as.numeric(featureRankColumnName)) %>% rename(featureImportance= all_of(featureImportanceColumnName))
+  d2 <- d0 %>% dplyr::mutate(permutation = 0) %>% dplyr::mutate(featureRank=as.numeric(featureRankColumnName)) %>% dplyr::rename(featureImportance= dplyr::all_of(featureImportanceColumnName))
   }
-  d3 <- d2 %>% mutate("LogfeatureImportance" = log(featureImportance))
+  d3 <- d2 %>% dplyr::mutate("LogfeatureImportance" = log(featureImportance))
   d3$featureRank<-d3$featureRank-1 #necessary to start feature ranking at 0 for plots.
   if(any(is.na(d3$featureRank))){
     stop("NA's detected in feature rank column ; Please check you used the right column name and try again")
