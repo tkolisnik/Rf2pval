@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Rf2pval: A comprehensive approach to genomic analysis using scikit-learn’s Random Forest models and rank-based feature reduction in R</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Rf2pval: A comprehensive approach to
+genomic analysis using scikit-learn’s Random Forest models and
+rank-based feature reduction in R</h1>
+
+
+
+<div id="introduction-to-rf2pval" class="section level1">
+<h1>Introduction to Rf2pval</h1>
+<p><strong>Welcome to Rf2pval:</strong> a comprehensive tool designed to
+revolutionize your approach to genomic data analysis using Random Forest
+Models in R. Tailored for expression data, such as RNA-seq or
+Microarray, Rf2pval is built for bioinformaticians and researchers
+looking to explore the relationship between biological features and a
+matched binary outcome variable using Random Forest models. Please see
+our vignette for instructions that will guide you through Rf2pval’s
+seamless integration of scikit-learn’s Random Forest methodologies
+(imported to R via reticulate) for model development, evaluation, and
+our custom feature reduction approach by way of rank-based permutation.
+It will also direct you through our integration with SHAP and
+gProfiler.</p>
+<p>This vignette will guide you through:</p>
+<ul>
+<li><p>Rf2pval’s integration of scikit-learn’s Random Forest
+methodologies (via <code>reticulate</code>).</p></li>
+<li><p>Data preparation for use in Rf2pval (and scikit-learn).</p></li>
+<li><p>Model development and evaluation.</p></li>
+<li><p>Our custom feature reduction approach using rank-based
+permutation.</p></li>
+<li><p>Integration with SHAP for feature directionality
+interpretation.</p></li>
+<li><p>Integration with gProfiler for gene set enrichment and ontology
+analysis.</p></li>
+</ul>
+<div id="is-this-package-right-for-me" class="section level2">
+<h2>Is This Package Right for Me?</h2>
+<p>Consider Rf2pval if you:</p>
+<ul>
+<li><p>Have genomic data (RNA-seq or Microarray) with a binary outcome
+variable.</p></li>
+<li><p>Aim to develop and evaluate Random Forest model’s from Python’s
+scikit-learn through our custom R wrapper.</p></li>
+<li><p>Seek rank-based feature reduction, yielding a list of significant
+features.</p></li>
+</ul>
+<p>Rf2pval offers:</p>
+<ul>
+<li><p>A final list of reduced features with p-values.</p></li>
+<li><p>SHAP values for understanding feature influence on the
+outcome.</p></li>
+<li><p>Integration with gProfiler for extensive gene set enrichment
+analysis.</p></li>
+</ul>
+<p>For more information and to contribute to the Rf2pval package, please
+visit the <a href="https://github.com/tkolisnik/Rf2pval">GitHub
+repository</a>.</p>
+</div>
+</div>
+<div id="r-package-installation-and-setup" class="section level1">
+<h1>1. R Package Installation and Setup</h1>
+<p>For the best experience, use <a href="https://posit.co/products/open-source/rstudio/">RStudio by
+Posit</a> for installing and running the Rf2pval package.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>Installation<span class="sc">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fl">1.</span> Install devtools <span class="cf">if</span> not already installed<span class="sc">:</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;devtools&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fl">2.</span> Use devtools to install Rf2pval</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;tkolisnik/Rf2pval&quot;</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fl">3.</span> Load Rf2pval</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">library</span>(Rf2pval)</span></code></pre></div>
+<p>This package has been developed for Apple mac (M1 arm64). It does not
+work properly on windows machines due to incompatibilties with the
+back-end paralellization of model building. It likely works on linux
+machines and other mac’s but has not been tested.</p>
+<p>This package leverages scikit-learn’s random forest model using the R
+package reticulate to allow us to execute Python code within R.
+Therefore, in order to use this package you must first install python
+3.9.18 and conda, and setup a conda environment with python 3.9.18,
+scikit-learn 3.1.2, numpy 1.26.0 and pandas 2.1.2 and their
+dependencies.</p>
+<p>This can be done in R once reticulate is installed and loaded by
+running the commands:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;reticulate&quot;</span>)) {</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>    <span class="fu">install.packages</span>(<span class="st">&quot;reticulate&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>}</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>reticulate<span class="sc">::</span><span class="fu">use_python</span>(<span class="st">&quot;/usr/local/bin/python3&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>reticulate<span class="sc">::</span><span class="fu">conda_create</span>(<span class="at">envname =</span> <span class="st">&quot;rf2pval-conda&quot;</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>reticulate<span class="sc">::</span><span class="fu">conda_install</span>(<span class="at">envname =</span> <span class="st">&quot;rf2pval-conda&quot;</span>, <span class="at">packages =</span> <span class="fu">c</span>(<span class="st">&quot;scikit-learn&quot;</span>, <span class="st">&quot;numpy&quot;</span>,<span class="st">&quot;shap&quot;</span>))</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>reticulate<span class="sc">::</span><span class="fu">use_condaenv</span>(<span class="st">&quot;rf2pval-conda&quot;</span>, <span class="at">required =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co"># You can check if this has worked by running</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>reticulate<span class="sc">::</span><span class="fu">py_config</span>()</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co"># If conda installation has worked, the previous command will result in an output message similar to:</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>python<span class="sc">:</span>         <span class="er">/</span>opt<span class="sc">/</span>homebrew<span class="sc">/</span>Caskroom<span class="sc">/</span>miniconda<span class="sc">/</span>base<span class="sc">/</span>envs<span class="sc">/</span>rf2pval<span class="sc">-</span>conda<span class="sc">/</span>bin<span class="sc">/</span>python</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>libpython<span class="sc">:</span>      <span class="er">/</span>opt<span class="sc">/</span>homebrew<span class="sc">/</span>Caskroom<span class="sc">/</span>miniconda<span class="sc">/</span>base<span class="sc">/</span>envs<span class="sc">/</span>rf2pval<span class="sc">-</span>conda<span class="sc">/</span>lib<span class="sc">/</span>libpython3.<span class="fl">9.</span>dylib</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>pythonhome<span class="sc">:</span>     <span class="er">/</span>opt<span class="sc">/</span>homebrew<span class="sc">/</span>Caskroom<span class="sc">/</span>miniconda<span class="sc">/</span>base<span class="sc">/</span>envs<span class="sc">/</span>rf2pval<span class="sc">-</span>conda<span class="sc">:</span><span class="er">/</span>opt<span class="sc">/</span>homebrew<span class="sc">/</span>Caskroom<span class="sc">/</span>miniconda<span class="sc">/</span>base<span class="sc">/</span>envs<span class="sc">/</span>rf2pval<span class="sc">-</span>conda</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>version<span class="sc">:</span>        <span class="dv">3</span>.<span class="fl">9.18</span> <span class="sc">|</span> packaged by conda<span class="sc">-</span>forge <span class="sc">|</span> (main, Aug <span class="dv">30</span> <span class="dv">2023</span>, <span class="dv">03</span><span class="sc">:</span><span class="dv">53</span><span class="sc">:</span><span class="dv">08</span>)  [Clang <span class="dv">15</span>.<span class="fl">0.7</span> ]</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>numpy<span class="sc">:</span>          <span class="er">/</span>opt<span class="sc">/</span>homebrew<span class="sc">/</span>Caskroom<span class="sc">/</span>miniconda<span class="sc">/</span>base<span class="sc">/</span>envs<span class="sc">/</span>rf2pval<span class="sc">-</span>conda<span class="sc">/</span>lib<span class="sc">/</span>python3<span class="fl">.9</span><span class="sc">/</span>site<span class="sc">-</span>packages<span class="sc">/</span>numpy</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>numpy_version<span class="sc">:</span>  <span class="dv">1</span>.<span class="fl">26.0</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>sklearn<span class="sc">:</span>        <span class="er">/</span>opt<span class="sc">/</span>homebrew<span class="sc">/</span>Caskroom<span class="sc">/</span>miniconda<span class="sc">/</span>base<span class="sc">/</span>envs<span class="sc">/</span>rf2pval<span class="sc">-</span>conda<span class="sc">/</span>lib<span class="sc">/</span>python3<span class="fl">.9</span><span class="sc">/</span>site<span class="sc">-</span>packages<span class="sc">/</span>sklearn</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>NOTE<span class="sc">:</span> Python version was forced by <span class="fu">use_python</span>() <span class="cf">function</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co"># You may now proceed to using the package</span></span></code></pre></div>
+<div id="installation-notes" class="section level2">
+<h2>Installation Notes:</h2>
+<p>You can also build your conda environment outside of Rstudio in the
+terminal.</p>
+<p>For more information on dependency installation see:</p>
+<p><a href="https://www.python.org/downloads/" class="uri">https://www.python.org/downloads/</a></p>
+<p><a href="https://brew.sh/" class="uri">https://brew.sh/</a></p>
+<p><a href="https://conda.io/projects/conda/en/latest/user-guide/install/index.html" class="uri">https://conda.io/projects/conda/en/latest/user-guide/install/index.html</a></p>
+<p><a href="https://docs.conda.io/projects/miniconda/en/latest/" class="uri">https://docs.conda.io/projects/miniconda/en/latest/</a></p>
+</div>
+</div>
+<div id="data-preparation" class="section level1">
+<h1>2. Data Preparation</h1>
+<p>Load and prepare your datasets. This R package comes pre-loaded with
+an RNA-seq dataset which can be loaded using:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;/path/to/Rf2pval/data/demo_rnaseq_data.RData&quot;</span>)</span></code></pre></div>
+<details>
+<summary>
+<strong>Structuring Your Data for Machine Learning</strong>
+</summary>
+<p>
+To facilitate the use of our machine-learning tools, we recommend
+structuring your expression and target data similarly to our demo
+dataset. This section will guide you through this process and provide
+illustrative examples.
+</p>
+<p>
+Your data should be saved as a list containing four tibbles. Each tibble
+functions similarly to a data frame but offers additional benefits in
+handling and manipulating large datasets. Below is an overview of the
+structure and purpose of each tibble:
+</p>
+<h4>
+Training, Validation, and Testing Tibbles
+</h4>
+<ul>
+<li>
+<strong>Identifier:</strong> A unique identifier for each row (e.g.,
+“2041-04-12-1”), representing a sample or patient. This is crucial for
+tracking and referencing data points.
+</li>
+<li>
+<strong>Target:</strong> A binary variable (0 or 1) indicating the
+outcome to be predicted. It simplifies the outcome variable for machine
+learning purposes.
+</li>
+<li>
+<strong>Gene Expression Data:</strong> The remaining columns, such as
+ENSG00000253497 and ENSG00000238493, contain gene expression data, here
+represented as RNA-seq counts. Each column corresponds to a specific
+gene.
+</li>
+</ul>
+<h4>
+Target Categories Tibble
+</h4>
+<ul>
+<li>
+Includes the full list of identifiers (identifier) from the training,
+validation, and testing datasets.
+</li>
+<li>
+The <em>target_categorical</em> column provides the outcome variable in
+a categorical format. While the target in the other tibbles is binary,
+this column may contain more detailed categorical information.
+</li>
+<li>
+Essential for mapping and identification purposes across all datasets.
+</li>
+</ul>
+</details>
+<details>
+<summary>
+<strong>Best Practices for Data Splitting</strong>
+</summary>
+<p>
+In machine learning, datasets are typically split into three parts:
+</p>
+<ul>
+<li>
+<strong>Training Dataset:</strong> Used to train the machine learning
+model. It learns to make predictions or classify data based on this set.
+</li>
+<li>
+<strong>Validation Dataset:</strong> Used to tune the parameters of the
+model and provide an unbiased evaluation of a model fit during the
+training phase. It helps in providing a check against overfitting.
+</li>
+<li>
+<strong>Testing Dataset:</strong> Used to provide an unbiased evaluation
+of the final model fit. It’s only used after the model training and
+validation phases are complete.
+</li>
+</ul>
+<p>
+These splits help in effectively training the model and evaluating its
+performance in a way that is generalizable to new, unseen data.
+</p>
+<p>
+Standard Recommendations for Dataset Splitting: It’s a common practice
+to use around 70-80% of the data for training, and the remaining 20-30%
+split between validation and testing. However, these ratios can vary
+based on the size and specifics of your dataset.
+</p>
+</details>
+<p><br> <br> <strong>Example data structures expected by
+Rf2pval:</strong><br> <em>These are tibbles which should be saved into
+one list variable</em></p>
+<table>
+<caption>training_data</caption>
+<colgroup>
+<col width="16%" />
+<col width="8%" />
+<col width="18%" />
+<col width="18%" />
+<col width="18%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">identifier</th>
+<th align="left">target</th>
+<th align="left">ENSG00000253497</th>
+<th align="left">ENSG00000238493</th>
+<th align="left">ENSG00000248122</th>
+<th align="left">ENSG00000175544</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2041-04-12-1</td>
+<td align="left">1</td>
+<td align="left">0.234937</td>
+<td align="left">0</td>
+<td align="left">0.19781</td>
+<td align="left">0.395993</td>
+</tr>
+<tr class="even">
+<td align="left">2041-08-12-1</td>
+<td align="left">1</td>
+<td align="left">0.000000</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">1.162733</td>
+</tr>
+<tr class="odd">
+<td align="left">2041-13-12-1</td>
+<td align="left">1</td>
+<td align="left">2.252000</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">0.373436</td>
+</tr>
+<tr class="even">
+<td align="left">2041-18-12-1</td>
+<td align="left">1</td>
+<td align="left">0.000000</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">0.026357</td>
+</tr>
+<tr class="odd">
+<td align="left">2041-21-12-1</td>
+<td align="left">1</td>
+<td align="left">0.000000</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">0.692587</td>
+</tr>
+<tr class="even">
+<td align="left">2041-34-12-1</td>
+<td align="left">1</td>
+<td align="left">0.000000</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">0.818505</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-004-12-1</td>
+<td align="left">1</td>
+<td align="left">6.374389</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">2.758556</td>
+</tr>
+<tr class="even">
+<td align="left">2706-011-12-1</td>
+<td align="left">1</td>
+<td align="left">0.000000</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">0.073407</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-023-12-1</td>
+<td align="left">0</td>
+<td align="left">0.000010</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">0.111399</td>
+</tr>
+<tr class="even">
+<td align="left">2706-030-12-1</td>
+<td align="left">1</td>
+<td align="left">0.000000</td>
+<td align="left">0</td>
+<td align="left">0.00000</td>
+<td align="left">1.450572</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>testing_data</caption>
+<colgroup>
+<col width="16%" />
+<col width="8%" />
+<col width="18%" />
+<col width="18%" />
+<col width="18%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">identifier</th>
+<th align="left">target</th>
+<th align="left">ENSG00000253497</th>
+<th align="left">ENSG00000238493</th>
+<th align="left">ENSG00000248122</th>
+<th align="left">ENSG00000175544</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2041-07-12-1</td>
+<td align="left">0</td>
+<td align="left">1e-05</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">3.828424</td>
+</tr>
+<tr class="even">
+<td align="left">2706-025-12-1</td>
+<td align="left">1</td>
+<td align="left">0e+00</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.986655</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-065-12-1</td>
+<td align="left">0</td>
+<td align="left">1e-05</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.039046</td>
+</tr>
+<tr class="even">
+<td align="left">2706-071-12-1</td>
+<td align="left">0</td>
+<td align="left">1e-05</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.272935</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-091-12-1</td>
+<td align="left">0</td>
+<td align="left">1e-05</td>
+<td align="left">0</td>
+<td align="left">0.231253</td>
+<td align="left">0.706623</td>
+</tr>
+<tr class="even">
+<td align="left">2706-098-12-1</td>
+<td align="left">0</td>
+<td align="left">1e-05</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">1.469622</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-112-12-1</td>
+<td align="left">1</td>
+<td align="left">0e+00</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.310703</td>
+</tr>
+<tr class="even">
+<td align="left">2706-164-12-1</td>
+<td align="left">0</td>
+<td align="left">1e-05</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.982244</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-172-12-1</td>
+<td align="left">1</td>
+<td align="left">0e+00</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.145355</td>
+</tr>
+<tr class="even">
+<td align="left">2706-213-12-1</td>
+<td align="left">1</td>
+<td align="left">0e+00</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">1.056201</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>validation_data</caption>
+<colgroup>
+<col width="16%" />
+<col width="8%" />
+<col width="18%" />
+<col width="18%" />
+<col width="18%" />
+<col width="18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">identifier</th>
+<th align="left">target</th>
+<th align="left">ENSG00000253497</th>
+<th align="left">ENSG00000238493</th>
+<th align="left">ENSG00000248122</th>
+<th align="left">ENSG00000175544</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2706-002-12-1</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">1.087608</td>
+</tr>
+<tr class="even">
+<td align="left">2706-057-12-1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.334466</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-061-12-1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.150133</td>
+</tr>
+<tr class="even">
+<td align="left">2706-063-12-1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">3.247098</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-076-12-1</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.093304</td>
+</tr>
+<tr class="even">
+<td align="left">2706-095-12-1</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.550842</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-117-12-1</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.260355</td>
+<td align="left">0.752071</td>
+</tr>
+<tr class="even">
+<td align="left">2706-135-12-1</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">1.831656</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-147-12-1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.736398</td>
+</tr>
+<tr class="even">
+<td align="left">2706-188-12-1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0.000000</td>
+<td align="left">0.829256</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>target_categories</caption>
+<thead>
+<tr class="header">
+<th align="left">identifier</th>
+<th align="left">target_categorical</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2041-04-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="even">
+<td align="left">2041-08-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="odd">
+<td align="left">2041-13-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="even">
+<td align="left">2041-18-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="odd">
+<td align="left">2041-21-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="even">
+<td align="left">2041-34-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-004-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="even">
+<td align="left">2706-011-12-1</td>
+<td align="left">Right</td>
+</tr>
+<tr class="odd">
+<td align="left">2706-023-12-1</td>
+<td align="left">Left</td>
+</tr>
+<tr class="even">
+<td align="left">2706-030-12-1</td>
+<td align="left">Right</td>
+</tr>
+</tbody>
+</table>
+<p><em>Recall .RData files are created using the command:</em>
+<code>save(variable_name, file=“path/to/file”) </code> <br> and loaded
+using <code>load(“path/to/file”)</code></p>
+<p>Alternatively, instead of using the .RData format, expression data
+can be imported through other approaches such as CSV or TSV. Here is
+another example of loading data from CSV file formats. Ensure each file
+is structured with the correct data and columns, as shown in the tables
+above.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Load target data:</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>training_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;/path/to/file/training_data.csv&quot;</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>validation_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;/path/to/file/validation_data.csv&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>testing_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;/path/to/file/testing_data.csv&quot;</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>target_categories <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;/path/to/file/target_categories.csv&quot;</span>)</span></code></pre></div>
+<p>and then these variables should be combined into a list of tibbles
+using:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Load the tibble package</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Ensure each dataset is converted to a tibble and combine them into a list</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>demo_rnaseq_data <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">training_data =</span> <span class="fu">as_tibble</span>(training_data),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">validation_data =</span> <span class="fu">as_tibble</span>(validation_data),</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">testing_data =</span> <span class="fu">as_tibble</span>(testing_data),</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">target_categories =</span> <span class="fu">as_tibble</span>(target_categories)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="data-preprocessing" class="section level1">
+<h1>3. Data preprocessing</h1>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># This function prepares a dataset for scikit-learn random forest machine learning by creating a matrix from the dataset excluding certain columns, and extracting a target vector. It is flexible and can handle different types of data sets such as training, testing, or validation. Data must be in the correct input format, see vignette or example dataset for details.</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>processed_training_data <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">create_feature_matrix</span>(demo_rnaseq_data<span class="sc">$</span>training_data,<span class="st">&quot;training&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>processed_validation_data <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">create_feature_matrix</span>(demo_rnaseq_data<span class="sc">$</span>validation_data,<span class="st">&quot;validation&quot;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>processed_testing_data <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">create_feature_matrix</span>(demo_rnaseq_data<span class="sc">$</span>testing_data,<span class="st">&quot;testing&quot;</span>)</span></code></pre></div>
+</div>
+<div id="model-tuning" class="section level1">
+<h1>4. Model Tuning</h1>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># This function uses scikit-learn&#39;s python based GridSearchCV to perform hyperparameter tuning and training of a RandomForestClassifier. It allows for customizable parameter grids and includes preprocessing steps of one-hot encoding and scaling. The function is designed to find the best hyperparameters based on accuracy. Please reference the scikit-learn GridSearchCV documentation for the full description of options, however our defaults are comprehensive.</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co"># If running defaults:</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>tuning_results <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">tune_and_train_rf_model</span>(processed_training_data<span class="sc">$</span>X_training_mat, processed_training_data<span class="sc">$</span>y_training_vector) </span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="fu">print</span>(tuning_results<span class="sc">$</span>grid_search<span class="sc">$</span>best_params_)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">print</span>(tuning_results<span class="sc">$</span>grid_search<span class="sc">$</span>best_score_)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co"># If not running defaults and customization of parameter is desired:</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>custom_parameter_grid <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">bootstrap =</span> <span class="fu">list</span>(<span class="cn">TRUE</span>),</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="at">class_weight =</span> <span class="fu">list</span>(<span class="cn">NULL</span>),</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  <span class="at">max_depth =</span> <span class="fu">list</span>(5L, 20L, <span class="cn">NULL</span>),</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  <span class="at">n_estimators =</span> <span class="fu">as.integer</span>(<span class="fu">seq</span>(<span class="dv">10</span>, <span class="dv">90</span>, <span class="dv">10</span>)),</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="at">max_features =</span> <span class="fu">list</span>(<span class="st">&quot;sqrt&quot;</span>, <span class="fl">0.2</span>),</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="at">criterion =</span> <span class="fu">list</span>(<span class="st">&quot;gini&quot;</span>), <span class="co"># It is not recommended to change this, as it is used for Rf2pval&#39;s rank-based feature reduction approach.</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  <span class="at">warm_start =</span> <span class="fu">list</span>(<span class="cn">FALSE</span>),</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="at">min_samples_leaf =</span> <span class="fu">list</span>(1L, 50L),</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="at">min_samples_split =</span> <span class="fu">list</span>(2L, 200L)</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>)</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co"># Train your model and perform hyperparameter tuning using Rf2pval. This can be extremely time consuming and scales rapidly with dataset size. </span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co"># A small dataset such as the demo data may take &gt;5 minutes, however a larger 300 x 50,000 dataset may take days depending on the number of cores used.</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co"># It is strongly recommended to increase the number of cores to reduce the time this takes.</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>tuning_results <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">tune_and_train_rf_model</span>(processed_training_data<span class="sc">$</span>X_training_mat, processed_training_data<span class="sc">$</span>y_training_vector, </span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>                                <span class="at">scoring=</span><span class="st">&#39;f1&#39;</span>, </span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>                                <span class="at">seed =</span> <span class="dv">123</span>, </span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>                                <span class="at">param_grid =</span> custom_parameter_grid,</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>                                <span class="at">n_jobs =</span> <span class="dv">1</span>,</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>                                <span class="at">n_cores =</span> <span class="dv">7</span>)</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co"># After the model is tuned, print the best parameters and the best score. See scikit-learn documentation for interpreting scores. It is recommended to re-tune on different parameters if score less than 70.</span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="fu">print</span>(tuning_results<span class="sc">$</span>grid_search<span class="sc">$</span>best_params_)</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="fu">print</span>(tuning_results<span class="sc">$</span>grid_search<span class="sc">$</span>best_score_)</span></code></pre></div>
+</div>
+<div id="train-and-evaluate-the-random-forest-model-on-validation-set" class="section level1">
+<h1>5. Train and Evaluate the Random Forest model on validation set</h1>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># This function fits a Random Forest model using the provided hyperparameters and training data, then evaluates its performance on a validation set.</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co"># Fit the results to the validation set to check performance</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>fitting_results <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">fit_and_evaluate_rf</span>(tuning_results<span class="sc">$</span>best_params,processed_training_data<span class="sc">$</span>X_training_mat,processed_training_data<span class="sc">$</span>y_training_vector,processed_validation_data<span class="sc">$</span>X_validation_mat,processed_validation_data<span class="sc">$</span>y_validation_vector)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co"># Print the fitting results, provides accuracy, f1 score, precision, recall and roc_auc scores on the model as fitted to the validation set</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="fu">print</span>(fitting_results)</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co"># If performance is not adequate, you may want to reconstruct your model, tweak your data, and rerun step 7 before proceeding.</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co"># This function is also used to evaluate the testing set when the model is finalized. </span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>fitting_results <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">fit_and_evaluate_rf</span>(tuning_results<span class="sc">$</span>best_params,processed_training_data<span class="sc">$</span>X_training_mat,processed_training_data<span class="sc">$</span>y_training_vector,processed_testing_data<span class="sc">$</span>X_testing_mat,processed_testing_data<span class="sc">$</span>y_testing_vector)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co"># Print the fitting results, provides accuracy, f1 score, precision, recall and roc_auc scores on the model as fitted to the validation set</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="fu">print</span>(fitting_results)</span></code></pre></div>
+</div>
+<div id="permute-the-model-and-obtain-feature-importances" class="section level1">
+<h1>6. Permute the model and obtain feature importances</h1>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># This function fits a Random Forest model and calculates the true and permuted feature importances. It performs permutations on the target variable to generate permuted importances for comparison.</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co"># This step is also time consuming and scales with the number of permutations used. </span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>feat_importances <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">calculate_feature_importances</span>(fitting_results<span class="sc">$</span>model,processed_training_data<span class="sc">$</span>X_training_mat,processed_training_data<span class="sc">$</span>y_training_vector,<span class="at">n_permutations=</span><span class="dv">1000</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co"># Print top features from model pre-Rank-based feature reduction</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="fu">print</span>(feat_importances<span class="sc">$</span>top_features)</span></code></pre></div>
+</div>
+<div id="calculate-significance-metrics" class="section level1">
+<h1>7. Calculate Significance Metrics</h1>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Calculate quantiles</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co"># This function computes the mean, lower, and upper quantiles of permuted feature importance scores and compares them with the observed importance scores from the true values. It is used to assess the significance of feature importances from random forest models by comparing them against a distribution of importances obtained through permutation.</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>quantile_data <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">calculate_quantiles</span>(feat_importances<span class="sc">$</span>true_importances, feat_importances<span class="sc">$</span>permuted_importances)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co"># Calculate p-value for the entire feature set</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co"># This function calculates the proportion-based p-value for the entire feature set by comparing the observed sum of absolute deviations from the mean feature importance to those from permuted data. It is particularly useful in permutation tests to assess the statistical significance of the observed data.</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>pvalue_set <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">calculate_full_set_pvalue</span>(feat_importances<span class="sc">$</span>permuted_importances, quantile_data)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co"># Calculate p-value for each rank</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co"># This function calculates p-values for each feature rank in the dataset by comparing the observed feature importances against the distribution of importances in the permuted data. It returns ranks and their respective p-values and proportions up to a specified alpha threshold.</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>pvalues_ranks <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">calculate_ranked_based_pvalues</span>(feat_importances<span class="sc">$</span>true_importances, feat_importances<span class="sc">$</span>permuted_importances, <span class="at">alpha=</span><span class="fl">0.05</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co"># Print top features from model post-Rank based feature reduction</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="fu">print</span>(pvalues_ranks)</span></code></pre></div>
+</div>
+<div id="generate-feature-importance-plots-pi-histogram-plot-and-empirical-cumulative-density-function-plot" class="section level1">
+<h1>8. Generate Feature Importance Plots, Pi Histogram Plot, and
+Empirical Cumulative Density Function Plot</h1>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Generate Full feature importance plot</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co"># This function generates a figure which shows the true observed data plotted against the permuted data, by rank. The intersection of the true data with the upper quartile is shown, which we recommend as a significance cutoff. Note: There are ample parameters for controlling the axes scale, label location, and zoom, because of data variability, you will almost certainly have to adjust these to fit your plot.</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>fiplot_full <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">generate_fi_rank_plot</span>(feat_importances<span class="sc">$</span>permuted_importances, quantile_data, <span class="at">xlimitmin=</span><span class="dv">1</span>, <span class="at">xlimitmax =</span> <span class="dv">10</span>, <span class="at">ylimitmin=</span> <span class="sc">-</span><span class="dv">5</span>, <span class="at">ylimitmax =</span> <span class="dv">0</span>, <span class="at">labelhorizontaladjust =</span> <span class="sc">-</span><span class="fl">0.05</span>,<span class="at">labelverticaladjust =</span> <span class="fl">1.5</span>,<span class="at">focusedView =</span> <span class="cn">FALSE</span>,<span class="at">logOn =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="fu">print</span>(fiplot_full)</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co"># Same plot as above, but zoomed to show only the significant results</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>fiplot_focused <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">generate_fi_rank_plot</span>(feat_importances<span class="sc">$</span>permuted_importances, quantile_data, <span class="at">xlimitmin=</span><span class="dv">1</span>, <span class="at">xlimitmax =</span> <span class="dv">10</span>, <span class="at">ylimitmin=</span> <span class="sc">-</span><span class="dv">5</span>, <span class="at">ylimitmax =</span> <span class="dv">0</span>, <span class="at">labelhorizontaladjust =</span> <span class="fl">1.05</span>,<span class="at">labelverticaladjust =</span> <span class="fl">1.5</span>,<span class="at">focusedView =</span> <span class="cn">TRUE</span>,<span class="at">logOn =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="fu">print</span>(fiplot_focused)</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co"># Generate pi Histogram plot</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co"># Creates a histogram showing the sum of absolute deviations by count, the measures used to calculate the pi statistics used in the p-value calculation for the set.</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>pihist_plot <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">generate_pi_histogram</span>(feat_importances<span class="sc">$</span>permuted_importances, quantile_data)</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="fu">print</span>(pihist_plot)</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="co"># Generate ECDF plot</span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="co"># Creates a plot of the empirical cumulative density function showing the sum of absolute deviations by fraction of data.</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>ecdf_plot <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">generate_pi_ECDF_plot</span>(feat_importances<span class="sc">$</span>permuted_importances, quantile_data)</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="fu">print</span>(ecdf_plot)</span></code></pre></div>
+<p>Advanced Features</p>
+<p>Explore advanced functionalities of Rf2pval, such as SHAP value
+analysis or gene ontology.</p>
+</div>
+<div id="shap-analysis" class="section level1">
+<h1>9. SHAP Analysis</h1>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Produce a list of SHAP values</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co"># This function calculates SHAP values for a given dataset using a provided model. It then identifies significant features based on the SHAP values for the specified class. Additionally, it prepares a long-format data frame of individual SHAP values suitable for visualization.</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>shapvals <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">calculate_SHAP_values</span>(fitting_results<span class="sc">$</span>model, processed_training_data<span class="sc">$</span>X_training_mat, <span class="at">class_index =</span> <span class="dv">1</span>, <span class="at">shap_std_dev_factor =</span> <span class="fl">0.5</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co"># Produce the SHAP Plots</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co"># Generates a combined bar and beeswarm plot to show global and local feature importance</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>shapplot <span class="ot">&lt;-</span> Rf2pval<span class="sc">::</span><span class="fu">generate_shap_plots</span>(<span class="at">mean_shap_values =</span> shapvals<span class="sc">$</span>significant_features,<span class="at">long_shap_data =</span> shapvals<span class="sc">$</span>long_shap_data)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="fu">print</span>(shapplot)</span></code></pre></div>
+</div>
+<div id="go-enrichment-analysis" class="section level1">
+<h1>10. GO Enrichment Analysis</h1>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">library</span>(clusterProfiler)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="fu">library</span>(org.Hs.eg.db) <span class="co"># Assuming your data is from human, if not see bioconductor for other organism dbs.</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="fu">library</span>(enrichplot)</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co"># We have 3 lists of significant features from our data that can be explored further</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co"># The &#39;raw&#39; list of siginificant features from the RF model (pre-Rank based feature reduction):</span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="fu">print</span>(feat_importances<span class="sc">$</span>top_features)</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co"># The list of significant features after rank-based permutation feature reduction (most conservative list):</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="fu">print</span>(pvalues_ranks)</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co"># The list of significant features from the SHAP analysis (can be further divided by directionality +/-):</span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="fu">print</span>(shapvals<span class="sc">$</span>significant_features)</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="co"># Subsequent steps can be ran on any of these feature lists, although if the list is too small these steps may not produce results.</span></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>features_list <span class="ot">&lt;-</span> shapvals<span class="sc">$</span>significant_features<span class="sc">$</span>feature <span class="co"># Features from SHAP</span></span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="co"># Alternatively:</span></span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="co">#features_list &lt;- pvalues_ranks$feature # Post-feature reduction (most conservative but least amount of features so may not have desired results)</span></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a><span class="co">#features_list &lt;- feat_importances$top_features # Top features from model pre-feature reduction (least robust)</span></span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a></span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a></span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a><span class="co"># Run the GO Enrichment Analysis</span></span>
+<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a><span class="co"># From clusterProfiler: GO Enrichment Analysis of a gene set. Given a vector of genes, this function will return the enrichment GO categories after FDR control.</span></span>
+<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a>ego <span class="ot">&lt;-</span> <span class="fu">enrichGO</span>(<span class="at">gene         =</span> features_list,</span>
+<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a>                <span class="at">OrgDb        =</span> org.Hs.eg.db,</span>
+<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a>                <span class="at">keyType      =</span> <span class="st">&quot;ENSEMBL&quot;</span>,</span>
+<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a>                <span class="at">ont          =</span> <span class="st">&quot;ALL&quot;</span>, <span class="co"># consider BP, CC, and MF ontologies</span></span>
+<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a>                <span class="at">pAdjustMethod =</span> <span class="st">&quot;none&quot;</span>, <span class="co"># adjust p-values using the BH method</span></span>
+<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a>                <span class="at">readable     =</span> <span class="cn">TRUE</span>)  <span class="co"># convert Entrez IDs back to gene symbols</span></span>
+<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a></span>
+<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a><span class="co"># Plot the gene ontology</span></span>
+<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a>enrichplot<span class="sc">::</span><span class="fu">dotplot</span>(ego, <span class="at">showCategory=</span><span class="dv">20</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Gene Ontology for Top Features&quot;</span>)</span></code></pre></div>
+</div>
+<div id="gprofiler-analysis" class="section level1">
+<h1>11. gProfiler Analysis</h1>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">library</span>(gprofiler2)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co"># Perform the enrichment analysis</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co"># From gprofiler2: Interface to the g:Profiler tool g:GOSt (https://biit.cs.ut.ee/gprofiler/gost) for functional enrichments analysis of gene lists. In case the input &#39;query&#39; is a list of gene vectors, results for multiple queries will be returned in the same data frame with column &#39;query&#39; indicating the corresponding query name. If &#39;multi_query&#39; is selected, the result is a data frame for comparing multiple input lists, just as in the web tool.</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>gprofiler_results <span class="ot">&lt;-</span> <span class="fu">gost</span>(<span class="at">query =</span> features_list, <span class="at">organism =</span> <span class="st">&quot;hsapiens&quot;</span>, <span class="at">ordered_query =</span> <span class="cn">FALSE</span>, <span class="at">user_threshold =</span> <span class="fl">0.5</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="co"># Create gProfiler Manhattan plot</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="co"># From gprofiler2: This function creates a Manhattan plot out of the results from gprofiler2::gost(). </span></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>gostplot_mh_plot<span class="ot">&lt;-</span><span class="fu">gostplot</span>(gprofiler_results, <span class="at">capped =</span> <span class="cn">FALSE</span>, <span class="at">interactive =</span> F)</span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="fu">print</span>(gostplot_mh_plot)</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="co"># Create gProfiler Manhattan plot with table of terms beneath it</span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a><span class="co"># From gprofiler2: This function allows to highlight a list of selected terms on the Manhattan plot created with the gprofiler2::gostplot() function. The resulting plot is saved to a publication ready image if &#39;filename&#39; is specified. The plot is very similar to the one shown in the g:GOSt web tool after clicking on circles.</span></span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>gostplot_mh_plot_with_table<span class="ot">&lt;-</span><span class="fu">publish_gostplot</span>(p, <span class="at">highlight_terms =</span> gprofiler_results<span class="sc">$</span>result<span class="sc">$</span>term_id,</span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>                       <span class="at">width =</span> <span class="cn">NA</span>, <span class="at">height =</span> <span class="cn">NA</span>, <span class="at">filename =</span> <span class="cn">NULL</span> )</span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a><span class="fu">print</span>(gostplot_mh_plot_with_table)</span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a></span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a><span class="co"># Assign gprofiler results</span></span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> gprofiler_results<span class="sc">$</span>result</span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a></span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a><span class="co"># Filter for significant results</span></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a>significant_results <span class="ot">&lt;-</span> result_df[result_df<span class="sc">$</span>significant, ]</span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a><span class="co"># Create a new column for -log10(p-value)</span></span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a>significant_results<span class="sc">$</span>log_p_value <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">log10</span>(significant_results<span class="sc">$</span>p_value)</span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a></span>
+<span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a><span class="co"># Print significant gprofiler results:</span></span>
+<span id="cb14-28"><a href="#cb14-28" tabindex="-1"></a><span class="fu">print</span>(significant_results)</span>
+<span id="cb14-29"><a href="#cb14-29" tabindex="-1"></a></span>
+<span id="cb14-30"><a href="#cb14-30" tabindex="-1"></a><span class="co"># Plot significant gProfiler results</span></span>
+<span id="cb14-31"><a href="#cb14-31" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb14-32"><a href="#cb14-32" tabindex="-1"></a><span class="fu">ggplot</span>(significant_results, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(term_name, log_p_value), <span class="at">y =</span> log_p_value)) <span class="sc">+</span></span>
+<span id="cb14-33"><a href="#cb14-33" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">&quot;identity&quot;</span>) <span class="sc">+</span></span>
+<span id="cb14-34"><a href="#cb14-34" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb14-35"><a href="#cb14-35" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb14-36"><a href="#cb14-36" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Enriched Terms&quot;</span>, <span class="at">y =</span> <span class="st">&quot;-log10(p-value)&quot;</span>, <span class="at">title =</span> <span class="st">&quot;Enrichment Analysis Results from gProfiler&quot;</span>) <span class="sc">+</span></span>
+<span id="cb14-37"><a href="#cb14-37" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))  </span></code></pre></div>
+</div>
+<div id="conclusion" class="section level1">
+<h1>12. Conclusion</h1>
+<p>Rf2pval provides comprehensive tools for bioinformatics analysis,
+including features for machine learning, feature importance evaluation,
+and more. This vignette covers the basics to get you started. For more
+detailed documentation on the use of each function, please refer to the
+function help pages within the package using the ‘?’ feature.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
