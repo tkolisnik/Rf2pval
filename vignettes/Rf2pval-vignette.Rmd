@@ -40,7 +40,7 @@ This vignette will guide you through:
 
 -   Integration with gProfiler for gene set enrichment and ontology analysis.
 
-## Is This Package Right for Me?
+## About Rf2pval
 
 Consider Rf2pval if you:
 
@@ -71,7 +71,7 @@ install.packages("devtools")
 library(devtools)
 
 # 2. Use devtools to install Rf2pval
-devtools::install_github("tkolisnik/Rf2pval", build_vignettes = TRUE)
+devtools::install_github("tkolisnik/Rf2pval")
 
 # 3. Load Rf2pval
 library(Rf2pval)
@@ -141,7 +141,7 @@ Then press session -> restart R -> then reload your conda environment using reti
 Load and prepare your datasets. This R package comes pre-loaded with an RNA-seq dataset which can be loaded using:
 
 ```{r, eval=FALSE}
-load("/path/to/Rf2pval/data/demo_rnaseq_data.RData")
+data("demo_rnaseq_data", package = "Rf2pval")
 ```
 
 <details>

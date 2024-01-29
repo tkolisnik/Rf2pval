@@ -15,6 +15,9 @@
 #' @return A tibble/data frame with columns for feature rank, mean permuted importance, lower and upper quantile bounds,
 #'   observed true importance, and their respective logarithmic transformations.
 #'   This data frame provides a comprehensive view of where true importances lie in relation to the distribution of permuted importances.
+#' @import dplyr
+#' @importFrom stats quantile
+#' @importFrom stats aggregate
 #' @export
 #' @examples
 #' quantile_results <- calculate_quantiles(feat_importances$true_importances, feat_importances$permuted_importances, alpha=0.05)
@@ -58,6 +61,7 @@ calculate_quantiles<-function(truevalues,permutedvalues,alpha=0.05){
 #'   This column contains the calculated p-value, which quantifies the probability of observing a sum of absolute deviations
 #'   as extreme as the one observed, under the null hypothesis. If the p-value is extremely low (below the resolution of the
 #'   number of permutations), it is reported as less than the reciprocal of the number of permutations.
+#' @import dplyr
 #' @examples
 #' pvalue_set <- calculate_full_set_pvalue(feat_importances$permuted_importances, quantile_data)
 #' @export
@@ -72,13 +76,13 @@ calculate_full_set_pvalue <- function(permutedvalues, quantiledata) {
 
   # Calculate deviations
   d <- d %>%
-    mutate(Mean = rep(quantiledata$mean, times = numberofpermutations)) %>%
-    mutate(permuted_std_dev = feature_importance - permuted_mean)
+    dplyr::mutate(Mean = rep(quantiledata$mean, times = numberofpermutations)) %>%
+    dplyr::mutate(permuted_std_dev = feature_importance - permuted_mean)
 
   # Sum of absolute deviations for permuted sets
   pi_permuted <- d %>%
     group_by(permutation) %>%
-    summarise(sum_abs_deviations = sum(abs(permuted_std_dev)))
+    dplyr::summarise(sum_abs_deviations = sum(abs(permuted_std_dev)))
 
   # Sum of absolute deviations for observed data
   pi_obs <- sum(abs(quantiledata$observed - quantiledata$mean))
@@ -111,7 +115,7 @@ calculate_full_set_pvalue <- function(permutedvalues, quantiledata) {
 #' @return A data frame with feature ranks, feature name (name of the feature at that rank in true model set), feature importance, log importance, proportion of observations from permuted set with importances greater than the true set importance value for that rank, and proportion calculated p-values for each rank.
 #'   Includes ranks up to the first one where the p-value exceeds the alpha threshold. Results sorted by Rank.
 #' @import dplyr
-#' @import stats
+#' @importFrom stats aggregate
 #' @examples
 #' pvalues_ranks <- calculate_ranked_based_pvalues(feat_importances$true_importances, feat_importances$permuted_importances, alpha=0.05)
 #' @export
