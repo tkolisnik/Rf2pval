@@ -5,9 +5,9 @@ output:
     toc: true
     number_sections: true
     fig_caption: true
-    latex_engine: xelatex  # Use xelatex for better font support
-    keep_tex: true  # Keep the intermediate .tex file for debugging
-    extra_dependencies: ["hyperref"]  # Ensure hyperlinks are included
+    latex_engine: xelatex
+    keep_tex: false
+    extra_dependencies: ["hyperref"]
 ---
 
 
