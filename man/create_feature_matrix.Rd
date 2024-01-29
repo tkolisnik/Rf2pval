@@ -27,7 +27,7 @@ Data must be in the correct input format, see vignette or example dataset for de
 \examples{
 library(Rf2pval)
 
-# Load sample data
+Load sample data
 data("demo_rnaseq_data")
 
 processed_training_data <- create_feature_matrix(demo_data_rnaseq_rf$training_data, "training")

@@ -7,7 +7,8 @@
 tune_and_train_rf_model(
   X,
   y,
-  scoring_method = "accuracy",
+  cv_folds = 5,
+  scoring_method = "roc_auc",
   seed = 4,
   param_grid = NULL,
   n_jobs = 1,
@@ -19,7 +20,9 @@ tune_and_train_rf_model(
 
 \item{y}{The target variable for the model (vector). Usually obtained from the create_feature_matrix function.}
 
-\item{scoring_method}{The scoring method to be used. Options are 'accuracy', 'precision', 'recall', roc_auc', 'f1'... see scikit-learn GridSearchCV documentation for more info.}
+\item{cv_folds}{The number of splits in StratifiedKFold cross validation, (default: 5)}
+
+\item{scoring_method}{The scoring method to be used. Options are 'accuracy', 'precision', 'recall', 'roc_auc', 'f1'... see scikit-learn GridSearchCV documentation for more info.}
 
 \item{seed}{The random seed for reproducibility (default: 4).}
 
@@ -66,7 +69,7 @@ Prepare the sample data into a format ingestible by the ML algorithm
 processed_training_data <- create_feature_matrix(demo_data_rnaseq_rf$training_data, "training")
 
 Model training (Warning: may take a long time if dataset is large and if param_grid has many options)
-tuning_results <- tune_and_train_rf_model(processed_training_data$X_training_mat, processed_training_data$y_training_vector, seed = 123, param_grid = list(max_depth = list(10L, 20L)))
+tuning_results <- tune_and_train_rf_model(processed_training_data$X_training_mat, processed_training_data$y_training_vector, cv_folds = 5, seed = 123, param_grid = list(max_depth = list(10L, 20L)))
 print(tuning_results$best_params)
 print(tuning_results$grid_search$best_score_)
 }

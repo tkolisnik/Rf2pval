@@ -92,7 +92,6 @@ calculate_full_set_pvalue <- function(permutedvalues, quantiledata) {
   }
 
   outdat <- data.frame("p_val_set" = pvalpi)
-  print(paste0("The proportion based p-value for the entire feature set is ", outdat[, 1]))
 
   return(outdat)
 }
@@ -103,12 +102,16 @@ calculate_full_set_pvalue <- function(permutedvalues, quantiledata) {
 #' This function calculates p-values for each feature rank in the dataset by comparing
 #' the observed feature importances against the distribution of importances in the permuted data.
 #' It returns ranks and their respective p-values and proportions up to a specified alpha threshold.
-#'
+#' Note: P-values returned as 0 actually represent p-values less than the smallest detectable limit.
+#' With 1,000 permutations, the smallest detectable p-value is 0.001 (1/n_permutations). Therefore,
+#' a reported p-value of 0 should be interpreted as p < 0.001.
 #' @param truevalues A data frame containing true feature importances and ranks.
 #' @param permutedvalues A data frame containing permuted feature importances and ranks.
 #' @param alpha Significance level for determining the cutoff in the one-tailed test (default 0.05).
 #' @return A data frame with feature ranks, feature name (name of the feature at that rank in true model set), feature importance, log importance, proportion of observations from permuted set with importances greater than the true set importance value for that rank, and proportion calculated p-values for each rank.
-#'   Includes ranks up to the first one where the p-value exceeds the alpha threshold.
+#'   Includes ranks up to the first one where the p-value exceeds the alpha threshold. Results sorted by Rank.
+#' @import dplyr
+#' @import stats
 #' @examples
 #' pvalues_ranks <- calculate_ranked_based_pvalues(feat_importances$true_importances, feat_importances$permuted_importances, alpha=0.05)
 #' @export
@@ -128,20 +131,20 @@ calculate_ranked_based_pvalues <- function(truevalues, permutedvalues, alpha = 0
   numberofpermutations <- max(permutedvalues$permutation)
 
   # Aggregate permuted feature importances
-  fweights <- aggregate(feature_importance ~ feature_rank, permutedvalues, c)
+  fweights <- stats::aggregate(feature_importance ~ feature_rank, permutedvalues, c)
 
   # Calculate observed mean and proportions
   fweights <- fweights %>%
     mutate(observedmean = truevalues$feature_importance[match(feature_rank, truevalues$feature_rank)]) %>%
     rowwise() %>%
-    mutate(
+    dplyr::mutate(
       proportion = if_else(observedmean > 0, sum(feature_importance > observedmean, na.rm = TRUE), NA_integer_),
       pvalue = if_else(is.na(proportion), NA_real_, proportion / numberofpermutations)
     )
 
   # Prepare final data frame
   truevalues$permutation <- NULL
-  fweightPvals <- select(fweights, feature_rank, proportion, pvalue)
+  fweightPvals <- dplyr::select(fweights, feature_rank, proportion, pvalue)
   fweightPvals <- left_join(truevalues, fweightPvals, by = "feature_rank")
 
   # Apply alpha cutoff
@@ -149,6 +152,11 @@ calculate_ranked_based_pvalues <- function(truevalues, permutedvalues, alpha = 0
     cutoff_index <- which(fweightPvals$pvalue >= alpha, arr.ind = TRUE)[1]
     fweightPvals <- fweightPvals[1:(cutoff_index - 1), ]
   }
+
+  # P-value interpretation warning
+  message("Note: P-values returned as 0 actually represent p-values less than the smallest detectable limit.\n",
+          "With 1,000 permutations, the smallest detectable p-value is 0.001 (1/n_permutations). Therefore, ",
+          "a reported p-value of 0 should be interpreted as p < 0.001.")
 
   return(fweightPvals)
 }

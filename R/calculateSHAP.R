@@ -6,11 +6,14 @@
 #'
 #' @param model The trained model for which SHAP values are to be calculated.
 #' @param data A matrix or data frame of input features for SHAP value calculation.
-#' @param class_index Index of the class for which to calculate SHAP values (1 or 2).
-#'   In binary classification, class 1's SHAP values explain the push towards class 0, whereas class 2's SHAP values explain the push towards class 1.
-#'   These values are negative mirror images of each other across the two classes. Default is 1.
-#'   For example, if input binary 0 = Left and 1 = Right, then choosing class_index = 1 will explain SHAP values from the perspective of push towards 0/Left.
-#'   and choosing class_index = 2 will explain SHAP values from the perspective of push towards 1/Right (the mirror).
+#' @param class_index Index of the class for which to calculate SHAP values.
+#'   For binary classification (e.g., target 1 = "Right", target 0 = "Left"),
+#'   this parameter determines the class perspective for SHAP analysis.
+#'   In the demo_rnaseq_data dataset:
+#'   - If class_index = 1, SHAP values represent feature contributions towards predicting "Right".
+#'   - If class_index = 0, SHAP values represent feature contributions towards predicting "Left".
+#'   In binary classification, SHAP values for one class are the negative of those for the other class,
+#'   this reflects how each feature influences the model's output in opposite directions for each class.
 #' @param shap_std_dev_factor Factor to determine the cutoff for significant SHAP values.
 #'   Default is 0.5. For example 0.5 is considered conservative as it means you are selecting features whose mean absolute SHAP values are above the mean plus half of the standard deviation.
 #' @return A list containing three elements:
@@ -27,7 +30,9 @@ calculate_SHAP_values <- function(model, data, class_index = 1, shap_std_dev_fac
   # Validate inputs
   if (is.null(model)) stop("Model input is NULL.")
   if (!is.matrix(data) && !is.data.frame(data)) stop("Data must be a matrix or data frame.")
-  if (!is.numeric(class_index) || class_index < 1 || class_index > 2) stop("class_index must be either 1 or 2 for binary classification.")
+  if (!is.numeric(class_index) || !(class_index %in% c(0, 1))) {
+    stop("class_index must be either 0 or 1 for binary classification.")
+  }
   if (!is.numeric(shap_std_dev_factor) || shap_std_dev_factor < 0) stop("shap_std_dev_factor must be a non-negative numeric value.")
 
   # Import necessary Python modules using reticulate
@@ -43,7 +48,7 @@ calculate_SHAP_values <- function(model, data, class_index = 1, shap_std_dev_fac
   selected_shap_values <- shap_values[[class_index]]
 
   # Convert the NumPy array to an R matrix
-  selected_shap_values_matrix <- py_to_r(selected_shap_values)
+  selected_shap_values_matrix <- reticulate::py_to_r(selected_shap_values)
 
   # Convert to data frame and assign column names
   feature_names <- colnames(data)
@@ -54,10 +59,11 @@ calculate_SHAP_values <- function(model, data, class_index = 1, shap_std_dev_fac
   non_zero_columns <- colnames(shap_values_df)[apply(shap_values_df, 2, function(x) any(x != 0))]
 
   # Filter data frame
-  significant_shap_values_df <- shap_values_df[, non_zero_columns, drop = FALSE]
+  significant_shap_values_df <- shap_values_df %>% dplyr::select(all_of(non_zero_columns))
+  #significant_shap_values_df <- shap_values_df[, non_zero_columns, drop = FALSE] # Deprecated method
 
   # Transform data to long format for visualization
-  long_shap_data <- pivot_longer(significant_shap_values_df, cols = non_zero_columns, names_to = "feature", values_to = "shap_value")
+  long_shap_data <- tidyr::pivot_longer(significant_shap_values_df, cols = non_zero_columns, names_to = "feature", values_to = "shap_value")
 
   # Calculate mean SHAP values
   mean_shap_values <- long_shap_data %>%
@@ -72,7 +78,7 @@ calculate_SHAP_values <- function(model, data, class_index = 1, shap_std_dev_fac
   shap_cutoff <- mean_abs_shap + (shap_std_dev_factor * sd_abs_shap)
 
   # Filter significant SHAP values
-  significant_features <- filter(mean_shap_values, abs_mean_shap > shap_cutoff)
+  significant_features <- dplyr::filter(mean_shap_values, abs_mean_shap > shap_cutoff)
 
   return(list(shap_values = shap_values_df, significant_features = significant_features, long_shap_data = long_shap_data))
 }

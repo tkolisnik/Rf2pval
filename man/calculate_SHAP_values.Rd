@@ -11,11 +11,16 @@ calculate_SHAP_values(model, data, class_index = 1, shap_std_dev_factor = 0.5)
 
 \item{data}{A matrix or data frame of input features for SHAP value calculation.}
 
-\item{class_index}{Index of the class for which to calculate SHAP values (1 or 2).
-In binary classification, class 1's SHAP values explain the push towards class 0, whereas class 2's SHAP values explain the push towards class 1.
-These values are negative mirror images of each other across the two classes. Default is 1.
-For example, if input binary 0 = Left and 1 = Right, then choosing class_index = 1 will explain SHAP values from the perspective of push towards 0/Left.
-and choosing class_index = 2 will explain SHAP values from the perspective of push towards 1/Right (the mirror).}
+\item{class_index}{Index of the class for which to calculate SHAP values.
+For binary classification (e.g., target 1 = "Right", target 0 = "Left"),
+this parameter determines the class perspective for SHAP analysis.
+In the demo_rnaseq_data dataset:
+\itemize{
+\item If class_index = 1, SHAP values represent feature contributions towards predicting "Right".
+\item If class_index = 0, SHAP values represent feature contributions towards predicting "Left".
+In binary classification, SHAP values for one class are the negative of those for the other class,
+this reflects how each feature influences the model's output in opposite directions for each class.
+}}
 
 \item{shap_std_dev_factor}{Factor to determine the cutoff for significant SHAP values.
 Default is 0.5. For example 0.5 is considered conservative as it means you are selecting features whose mean absolute SHAP values are above the mean plus half of the standard deviation.}

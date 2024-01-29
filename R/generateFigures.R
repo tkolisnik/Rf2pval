@@ -40,7 +40,10 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
       geom_line(aes(x=feature_rank, y = logobserved), colour = "gold3") +
       ylim(ylimitmin,ylimitmax) +
       geom_vline(xintercept = which(qdata2$logobserved<qdata2$logupper)[1]-1,color="red") +
-      xlim(xlimitmin,xlimitmax)+
+      #xlim(xlimitmin,xlimitmax)+
+      scale_x_continuous(
+          breaks = seq(from = xlimitmin, to = xlimitmax, by = 1),
+          limits = c(xlimitmin, xlimitmax)) +
       annotate(x=which(qdata2$logobserved<qdata2$logupper)[1]-1,y=+Inf,label=paste0("No. Features above \nalpha threshold: ",which(qdata2$logobserved<qdata2$logupper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label",size=3.5) +
       theme_linedraw()+
       NULL
@@ -61,7 +64,10 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
         geom_line(aes(x=feature_rank, y = observed), colour = "gold3") +
         ylim(ylimitmin,ylimitmax) +
         geom_vline(xintercept = which(q_data2$observed<q_data2$upper)[1]-1,color="red") +
-        xlim(xlimitmin,xlimitmax)+
+        #xlim(xlimitmin,xlimitmax)+
+        scale_x_continuous(
+            breaks = seq(from = xlimitmin, to = xlimitmax, by = 1),
+            limits = c(xlimitmin, xlimitmax)) +
         annotate(x=which(q_data2$observed<q_data2$upper)[1]-1,y=+Inf,label=paste0("No. Features above \nalpha threshold: ",which(q_data2$observed<q_data2$upper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label",size=3.5) +
         theme_linedraw()+
         NULL
@@ -69,9 +75,9 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
   } else {
     if (logOn == TRUE) {
       qdata <- quantiledata
-      qdata2 <- qdata %>% filter(mean > 0) %>% filter(is.finite(logobserved))
+      qdata2 <- qdata %>% dplyr::filter(mean > 0) %>% filter(is.finite(logobserved))
       permdata <- permutedvalues
-      permdata2 <- permdata %>% filter(feature_rank %in% qdata2$feature_rank) %>% filter(is.finite(log_feature_importance))
+      permdata2 <- permdata %>% dplyr::filter(feature_rank %in% qdata2$feature_rank) %>% dplyr::filter(is.finite(log_feature_importance))
 
       # Calculate permuted mean
       permuted_mean <- permdata2 %>% group_by(feature_rank) %>% summarise(permuted_mean = mean(log_feature_importance, na.rm = TRUE))
@@ -93,7 +99,10 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
         #geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue") +
         ylim(ylimitmin, ylimitmax) +
         geom_vline(xintercept = red_line_x_intercept, color = "red") +
-        xlim(first_x_value, red_line_x_intercept) +
+        #xlim(first_x_value, red_line_x_intercept) +
+        scale_x_continuous(
+          breaks = seq(from = first_x_value, to = red_line_x_intercept, by = 1),
+          limits = c(first_x_value, red_line_x_intercept)) +
         annotate("label", x = red_line_x_intercept, y = ylimitmax, label = paste0("No. Features above alpha threshold: ", red_line_x_intercept), vjust = labelverticaladjust, hjust = labelhorizontaladjust, size = 3.5) +
         theme_linedraw()
 
@@ -105,12 +114,12 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
       return(p)
     } else {
       q_data <- quantiledata
-      q_data2 <- q_data %>% filter(mean > 0) %>% filter(observed > 0)
+      q_data2 <- q_data %>% dplyr::filter(mean > 0) %>% dplyr::filter(observed > 0)
       perm_data <- permutedvalues
-      perm_data2 <- perm_data %>% filter(feature_rank %in% q_data2$feature_rank) %>% filter(feature_importance > 0)
+      perm_data2 <- perm_data %>% dplyr::filter(feature_rank %in% q_data2$feature_rank) %>% dplyr::filter(feature_importance > 0)
 
       # Calculate permuted mean
-      permuted_mean <- perm_data2 %>% group_by(feature_rank) %>% summarise(permuted_mean = mean(feature_importance, na.rm = TRUE))
+      permuted_mean <- perm_data2 %>% group_by(feature_rank) %>% dplyr::summarise(permuted_mean = mean(feature_importance, na.rm = TRUE))
 
       intercept_calculation <- which(q_data2$observed < q_data2$upper)
       red_line_x_intercept <- if (length(intercept_calculation) > 0) intercept_calculation[1] - 1 else NA
@@ -129,7 +138,10 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
         #geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue") +
         ylim(ylimitmin, ylimitmax) +
         geom_vline(xintercept = red_line_x_intercept, color = "red") +
-        xlim(first_x_value, red_line_x_intercept) +
+        #xlim(first_x_value, red_line_x_intercept) +
+        scale_x_continuous(
+          breaks = seq(from = first_x_value, to = red_line_x_intercept, by = 1),
+          limits = c(first_x_value, red_line_x_intercept)) +
         annotate("label", x = red_line_x_intercept, y = ylimitmax, label = paste0("No. Features above alpha threshold: ", red_line_x_intercept), vjust = labelverticaladjust, hjust = labelhorizontaladjust, size = 3.5) +
         theme_linedraw()
 

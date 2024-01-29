@@ -30,8 +30,8 @@ fit_and_evaluate_rf(
 \item{seed}{Optional random seed.}
 }
 \value{
-A list containing the trained model and, if validation data is provided,
-the accuracy, f1, precision, recall and roc_auc scores on the validation set.
+A list containing the trained model and, if testing or validation data is provided,
+the accuracy, f1, precision, recall and roc_auc scores on the testing or validation set.
 }
 \description{
 This function fits a Random Forest model using the provided hyperparameters and

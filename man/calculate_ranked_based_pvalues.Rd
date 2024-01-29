@@ -15,12 +15,15 @@ calculate_ranked_based_pvalues(truevalues, permutedvalues, alpha = 0.05)
 }
 \value{
 A data frame with feature ranks, feature name (name of the feature at that rank in true model set), feature importance, log importance, proportion of observations from permuted set with importances greater than the true set importance value for that rank, and proportion calculated p-values for each rank.
-Includes ranks up to the first one where the p-value exceeds the alpha threshold.
+Includes ranks up to the first one where the p-value exceeds the alpha threshold. Results sorted by Rank.
 }
 \description{
 This function calculates p-values for each feature rank in the dataset by comparing
 the observed feature importances against the distribution of importances in the permuted data.
 It returns ranks and their respective p-values and proportions up to a specified alpha threshold.
+Note: P-values returned as 0 actually represent p-values less than the smallest detectable limit.
+With 1,000 permutations, the smallest detectable p-value is 0.001 (1/n_permutations). Therefore,
+a reported p-value of 0 should be interpreted as p < 0.001.
 }
 \examples{
 pvalues_ranks <- calculate_ranked_based_pvalues(feat_importances$true_importances, feat_importances$permuted_importances, alpha=0.05)

@@ -6,6 +6,7 @@
 #'
 #' @param X The features for the model (data frame or matrix). Usually obtained from the create_feature_matrix function.
 #' @param y The target variable for the model (vector). Usually obtained from the create_feature_matrix function.
+#' @param cv_folds The number of splits in StratifiedKFold cross validation, (default: 5)
 #' @param seed The random seed for reproducibility (default: 4).
 #' @param param_grid An optional list of parameters for tuning the model.
 #'                   If NULL, a default set of parameters is used. The list should follow
@@ -23,7 +24,7 @@
 #'                          min_samples_leaf = list(1L, 2L, 5L, 10L, 20L, 50L),
 #'                          min_samples_split = list(2L, 10L, 20L, 50L, 100L, 200L)
 #'                          )
-#' @param scoring_method The scoring method to be used. Options are 'accuracy', 'precision', 'recall', roc_auc', 'f1'... see scikit-learn GridSearchCV documentation for more info.
+#' @param scoring_method The scoring method to be used. Options are 'accuracy', 'precision', 'recall', 'roc_auc', 'f1'... see scikit-learn GridSearchCV documentation for more info.
 #' @param n_jobs An optional number of jobs to specify for parallel processing. Default is 1.
 #' @param n_cores An optional number of cores to specify for parallel processing. Default is (-2), which is 2 less than the maximum available number of cores.
 #' @return A list containing the best hyperparameters for the model, cross-validation scores on training set,
@@ -41,12 +42,12 @@
 #' processed_training_data <- create_feature_matrix(demo_data_rnaseq_rf$training_data, "training")
 #'
 #' Model training (Warning: may take a long time if dataset is large and if param_grid has many options)
-#' tuning_results <- tune_and_train_rf_model(processed_training_data$X_training_mat, processed_training_data$y_training_vector, seed = 123, param_grid = list(max_depth = list(10L, 20L)))
+#' tuning_results <- tune_and_train_rf_model(processed_training_data$X_training_mat, processed_training_data$y_training_vector, cv_folds = 5, seed = 123, param_grid = list(max_depth = list(10L, 20L)))
 #' print(tuning_results$best_params)
 #' print(tuning_results$grid_search$best_score_)
 #' @export
 
-tune_and_train_rf_model <- function(X, y, scoring_method = "accuracy", seed = 4, param_grid = NULL, n_jobs=1, n_cores=-2) {
+tune_and_train_rf_model <- function(X, y, cv_folds = 5, scoring_method = "roc_auc",  seed = 4, param_grid = NULL, n_jobs=1, n_cores=-2) {
   # Import necessary Python modules using reticulate
   python_pkgs<-setup_python_pkgs()
 
@@ -91,7 +92,7 @@ tune_and_train_rf_model <- function(X, y, scoring_method = "accuracy", seed = 4,
   }
 
   # Create a stratified k-fold cross validation object
-  strat_k_fold <- StratifiedKFold(n_splits = as.integer(5), shuffle = TRUE, random_state = as.integer(seed))
+  strat_k_fold <- StratifiedKFold(n_splits = as.integer(cv_folds), shuffle = TRUE, random_state = as.integer(seed))
 
   # Initialize the GridSearchCV object
   grid_search <- GridSearchCV(
@@ -122,8 +123,8 @@ tune_and_train_rf_model <- function(X, y, scoring_method = "accuracy", seed = 4,
 #' @param y_val Validation target vector (optional).
 #' @param save_path Optional path to save the trained model.
 #' @param seed Optional random seed.
-#' @return A list containing the trained model and, if validation data is provided,
-#'         the accuracy, f1, precision, recall and roc_auc scores on the validation set.
+#' @return A list containing the trained model and, if testing or validation data is provided,
+#'         the accuracy, f1, precision, recall and roc_auc scores on the testing or validation set.
 #' @examples
 #' fitting_results<-fit_and_evaluate_rf(tuning_results$best_params,processed_training_data$X_training_mat,processed_training_data$y_training_vector,processed_validation_data$X_validation_mat,processed_validation_data$y_validation_vector)
 #'
@@ -183,11 +184,11 @@ fit_and_evaluate_rf <- function(best_params, X_train, y_train, X_val = NULL, y_v
     roc_auc <- metrics$roc_auc_score(y_val, y_pred_proba)
 
     # Add scores to the results
-    results$validation_accuracy <- accuracy
-    results$validation_f1 <- f1
-    results$validation_precision <- precision
-    results$validation_recall <- recall
-    results$validation_roc_auc <- roc_auc
+    results$accuracy <- accuracy
+    results$f1 <- f1
+    results$precision <- precision
+    results$recall <- recall
+    results$roc_auc <- roc_auc
   }
 
 
@@ -209,7 +210,8 @@ fit_and_evaluate_rf <- function(best_params, X_train, y_train, X_val = NULL, y_v
 #'
 #' Print the fitting results, provides accuracy, f1 score, precision, recall and roc_auc scores on the model as fitted to the validation set
 #' print(top_features)
-#' @import dplyr reticulate
+#' @import dplyr
+#' @import reticulate
 #' @export
 
 calculate_feature_importances <- function(model, X_train, y_train, n_permutations = 1000) {
