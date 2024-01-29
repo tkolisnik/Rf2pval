@@ -56,7 +56,7 @@ reticulate::py_config()
 
 Rf2pval works with structured genomic data. Your data should be formatted as a list containing four tibbles (training, validation, testing, and target categories). See the [vignette](https://github.com/tkolisnik/Rf2pval/blob/main/vignettes/Rf2pval-vignette.pdf) for detailed structuring instructions.
 
-[Demo data](https://github.com/tkolisnik/Rf2pval/blob/main/data/demo_rnaseq_data.RData) is available using the command <code>load("demo_rnaseq_data")</code>
+[Demo data](https://github.com/tkolisnik/Rf2pval/blob/main/data/demo_rnaseq_data.RData) is available using the command <code>data("demo_rnaseq_data", package = "Rf2pval")</code>
 
 ## Usage
 
