@@ -11,6 +11,7 @@ generate_fi_rank_plot(
   xlimitmax = 500,
   ylimitmin = -10,
   ylimitmax = 0,
+  xtickbreaks = 10,
   labelverticaladjust = 1.05,
   labelhorizontaladjust = 1.05,
   indvPermScoresOn = TRUE,
@@ -30,6 +31,8 @@ generate_fi_rank_plot(
 \item{ylimitmin}{a numerical value for the minimum y value in the figure, default is -10}
 
 \item{ylimitmax}{a numerical value for the maximum y value in the figure, default is 0, but this will vary largely depending on your dataset, set it larger then narrow down}
+
+\item{xtickbreaks}{a numerical value for the break spacing between label ticks on the x axis, default is 10}
 
 \item{labelverticaladjust}{a numerical value specifying the vertical (y-axis) adjustment of the intersection with upper quartile label}
 

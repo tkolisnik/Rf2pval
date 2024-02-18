@@ -8,6 +8,7 @@
 #' @param xlimitmin a numerical value for the minimum x value in the figure, default is 1 because ranking starts at 1.
 #' @param xlimitmax a numerical value for the maximum x value in the figure, default is 500 (this is effectively the total number of features to include)
 #' @param ylimitmin a numerical value for the minimum y value in the figure, default is -10
+#' @param xtickbreaks a numerical value for the break spacing between label ticks on the x axis, default is 10
 #' @param ylimitmax a numerical value for the maximum y value in the figure, default is 0, but this will vary largely depending on your dataset, set it larger then narrow down
 #' @param labelverticaladjust a numerical value specifying the vertical (y-axis) adjustment of the intersection with upper quartile label
 #' @param labelhorizontaladjust a numerical value specifying the horizontal (x-axis) adjustment of the intersection with upper quartile label
@@ -21,14 +22,15 @@
 #' fiplot_focused <- generate_fi_rank_plot(feat_importances$permuted_importances, quantile_data, xlimitmin=1, xlimitmax = 10, ylimitmin= -5, ylimitmax = 0, labelhorizontaladjust = 1.05,labelverticaladjust = 1.5,focusedView = TRUE,logOn = TRUE)
 #' @return A plot of log feature importance score by feature rank showing the upper quartile intersection which we recommend to use for a cutoff.
 #' @export
-generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitmax=500,ylimitmin=-10,ylimitmax=0,labelverticaladjust=1.05,labelhorizontaladjust=1.05,indvPermScoresOn=TRUE, logOn=TRUE, focusedView=FALSE){
-  if(focusedView==FALSE){
+generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitmax=500,ylimitmin=-10,ylimitmax=0,xtickbreaks=10,labelverticaladjust=1.05,labelhorizontaladjust=1.05,indvPermScoresOn=TRUE, logOn=TRUE, focusedView=FALSE){
+  if(focusedView==FALSE){ # FULL View
     if(logOn==TRUE){
     qdata<-quantiledata
     qdata2<- qdata %>% dplyr::filter(mean > 0) %>% dplyr::filter(is.finite(logobserved))
     permdata<-permutedvalues
     permdata2<-permdata %>% dplyr::filter(feature_rank %in% qdata2$feature_rank) %>% dplyr::filter(is.finite(log_feature_importance))
-      ggplot2::ggplot(qdata2, ggplot2::aes(x = feature_rank, y = logmean)) +
+    message("Warnings regarding rows containing missing values (`geom_line()`) are related to values plotted outside axis limits and can be ignored once you are happy with the way your plot looks.")
+      p<-ggplot2::ggplot(qdata2, ggplot2::aes(x = feature_rank, y = logmean)) +
       xlab("Feature Rank")+
       ylab("Feature Importance Score (Log-Scaled)")+
       {if(indvPermScoresOn==TRUE){
@@ -42,17 +44,19 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
       geom_vline(xintercept = which(qdata2$logobserved<qdata2$logupper)[1]-1,color="red") +
       #xlim(xlimitmin,xlimitmax)+
       scale_x_continuous(
-          breaks = seq(from = xlimitmin, to = xlimitmax, by = 1),
+          breaks = seq(from = xlimitmin, to = xlimitmax, by = xtickbreaks),
           limits = c(xlimitmin, xlimitmax)) +
       annotate(x=which(qdata2$logobserved<qdata2$logupper)[1]-1,y=+Inf,label=paste0("No. Features above \nalpha threshold: ",which(qdata2$logobserved<qdata2$logupper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label",size=3.5) +
-      theme_linedraw()+
+      theme_linedraw() +
       NULL
-    } else {
+      return(p)
+    } else { # Full View not-log
         q_data<-quantiledata
         q_data2<-q_data %>% dplyr::filter(mean > 0) %>% dplyr::filter(observed>0)
         perm_data<-permutedvalues
         perm_data2 <- perm_data %>% dplyr::filter(feature_rank %in% q_data2$feature_rank) %>% dplyr::filter(feature_importance>0)
-        ggplot2::ggplot(q_data2, aes(x = feature_rank, y = mean)) +
+        message("Warnings regarding rows containing missing values (`geom_line()`) are related to values plotted outside axis limits and can be ignored once you are happy with the way your plot looks.")
+        p<-ggplot2::ggplot(q_data2, aes(x = feature_rank, y = mean)) +
         xlab("Feature Rank")+
         ylab("Feature Importance Score")+
         {if(indvPermScoresOn==TRUE){
@@ -66,13 +70,14 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
         geom_vline(xintercept = which(q_data2$observed<q_data2$upper)[1]-1,color="red") +
         #xlim(xlimitmin,xlimitmax)+
         scale_x_continuous(
-            breaks = seq(from = xlimitmin, to = xlimitmax, by = 1),
+            breaks = seq(from = xlimitmin, to = xlimitmax, by = xtickbreaks),
             limits = c(xlimitmin, xlimitmax)) +
         annotate(x=which(q_data2$observed<q_data2$upper)[1]-1,y=+Inf,label=paste0("No. Features above \nalpha threshold: ",which(q_data2$observed<q_data2$upper)[1]-1),vjust=labelverticaladjust,hjust=labelhorizontaladjust,geom="label",size=3.5) +
         theme_linedraw()+
         NULL
+        return(p)
     }
-  } else {
+  } else { # Focused View log
     if (logOn == TRUE) {
       qdata <- quantiledata
       qdata2 <- qdata %>% dplyr::filter(mean > 0) %>% filter(is.finite(logobserved))
@@ -89,32 +94,34 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
       if (is.na(red_line_x_intercept)) {
         stop("Red line x-intercept could not be calculated. Please check your data.")
       }
-
+      message("Warnings regarding rows containing missing values (`geom_line()`) are related to values plotted outside axis limits and can be ignored once you are happy with the way your plot looks.")
       p <- ggplot(qdata2, aes(x = feature_rank, y = logmean)) +
         xlab("Feature Rank") +
         ylab("Feature Importance Score (Log-Scaled)") +
+        {if (indvPermScoresOn) {
+          geom_line(data = permdata2, aes(x = feature_rank, group = permutation, y = log_feature_importance), alpha = .8, col = "lightblue")
+        }}+
         geom_ribbon(aes(ymin = loglower, ymax = logupper), fill = "grey20", alpha = 0.6) +
-        geom_line() +
+        geom_line()+
+        #geom_line(aes(x=feature_rank, y = logmean), colour = "black") +
         geom_line(aes(x = feature_rank, y = logobserved), colour = "gold3") +
         #geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue") +
         ylim(ylimitmin, ylimitmax) +
         geom_vline(xintercept = red_line_x_intercept, color = "red") +
         #xlim(first_x_value, red_line_x_intercept) +
         scale_x_continuous(
-          breaks = seq(from = first_x_value, to = red_line_x_intercept, by = 1),
+          breaks = seq(from = first_x_value, to = red_line_x_intercept, by = xtickbreaks),
           limits = c(first_x_value, red_line_x_intercept)) +
         annotate("label", x = red_line_x_intercept, y = ylimitmax, label = paste0("No. Features above alpha threshold: ", red_line_x_intercept), vjust = labelverticaladjust, hjust = labelhorizontaladjust, size = 3.5) +
         theme_linedraw()
-
-      if (indvPermScoresOn) {
-        p <- p + geom_line(data = permdata2, aes(x = feature_rank, group = permutation, y = log_feature_importance), alpha = .8, col = "lightblue")
-      }
-      p<- p + geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue")
+     # p<- p + geom_ribbon(aes(ymin = loglower, ymax = logupper), fill = "grey20", alpha = 0.3)
+      #p<- p + geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue")
 
       return(p)
-    } else {
+    } else { # Focused View not-log
       q_data <- quantiledata
-      q_data2 <- q_data %>% dplyr::filter(mean > 0) %>% dplyr::filter(observed > 0)
+      q_data2<- qdata %>% dplyr::filter(mean > 0) %>% dplyr::filter(is.finite(observed))
+      #q_data2 <- q_data %>% dplyr::filter(mean > 0) %>% dplyr::filter(observed > 0)
       perm_data <- permutedvalues
       perm_data2 <- perm_data %>% dplyr::filter(feature_rank %in% q_data2$feature_rank) %>% dplyr::filter(feature_importance > 0)
 
@@ -128,27 +135,26 @@ generate_fi_rank_plot<-function(permutedvalues,quantiledata,xlimitmin=1,xlimitma
       if (is.na(red_line_x_intercept)) {
         stop("Red line x-intercept could not be calculated. Please check your data.")
       }
-
+      message("Warnings regarding rows containing missing values (`geom_line()`) are related to values plotted outside axis limits and can be ignored once you are happy with the way your plot looks.")
       p <- ggplot(q_data2, aes(x = feature_rank, y = mean)) +
         xlab("Feature Rank") +
         ylab("Feature Importance Score") +
-        geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey20", alpha = 0.6) +
-        geom_line() +
+        {if (indvPermScoresOn) {
+          p <- p + geom_line(data = perm_data2, aes(x = feature_rank, group = permutation, y = feature_importance), alpha = .8, col = "lightblue")
+        }}+
+        geom_ribbon(aes(ymin = loglower, ymax = logupper), fill = "grey20", alpha = 0.6) +
+        geom_line()+
         geom_line(aes(x = feature_rank, y = observed), colour = "gold3") +
         #geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue") +
         ylim(ylimitmin, ylimitmax) +
         geom_vline(xintercept = red_line_x_intercept, color = "red") +
         #xlim(first_x_value, red_line_x_intercept) +
         scale_x_continuous(
-          breaks = seq(from = first_x_value, to = red_line_x_intercept, by = 1),
+          breaks = seq(from = first_x_value, to = red_line_x_intercept, by = xtickbreaks),
           limits = c(first_x_value, red_line_x_intercept)) +
         annotate("label", x = red_line_x_intercept, y = ylimitmax, label = paste0("No. Features above alpha threshold: ", red_line_x_intercept), vjust = labelverticaladjust, hjust = labelhorizontaladjust, size = 3.5) +
         theme_linedraw()
-
-      if (indvPermScoresOn) {
-        p <- p + geom_line(data = perm_data2, aes(x = feature_rank, group = permutation, y = feature_importance), alpha = .8, col = "lightblue")
-      }
-      p<- p + geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue")
+      #p<- p + geom_line(data = permuted_mean, aes(x = feature_rank, y = permuted_mean), color = "darkblue")
       return(p)
     }
   }

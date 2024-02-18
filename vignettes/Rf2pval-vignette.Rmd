@@ -1,5 +1,5 @@
 ---
-title: "Rf2pval: A comprehensive approach to genomic analysis using scikit-learn's Random Forest models and rank-based feature reduction in R"
+title: "Rf2pval: A comprehensive tool for genomic data analysis featuring scikit-learn Random Forests in R"
 output: 
   rmarkdown::pdf_document:
     toc: true
@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 
 # Introduction to Rf2pval
 
-**Welcome to Rf2pval:** a comprehensive tool designed to revolutionize your approach to genomic data analysis using Random Forest Models in R. Tailored for expression data, such as RNA-seq or Microarray, Rf2pval is built for bioinformaticians and researchers looking to explore the relationship between biological features and a matched binary outcome variable using Random Forest models. Please read on for instructions that will guide you through Rf2pval's seamless integration of scikit-learn's Random Forest methodologies (imported to R via reticulate) for model development, evaluation, and our custom feature reduction approach by way of rank-based permutation. You will also be directed you through our integration with Gene Ontology, Enrichment Analysis, SHAP and gProfiler.
+**Welcome to Rf2pval:** A comprehensive tool for genomic data analysis featuring scikit-learn Random Forests in R. Tailored for expression data, such as RNA-seq or Microarray, Rf2pval is built for bioinformaticians and researchers looking to explore the relationship between biological features and a matched binary outcome variable using Random Forest models. Please read on for instructions that will guide you through Rf2pval's seamless integration of scikit-learn's Random Forest methodologies (imported to R via reticulate) for model development, evaluation, and our custom feature reduction approach by way of rank-based permutation. You will also be directed you through our integration with Gene Ontology, Enrichment Analysis, SHAP and gProfiler.
 
 This vignette will guide you through:
 
@@ -44,21 +44,33 @@ This vignette will guide you through:
 
 Consider Rf2pval if you:
 
--   Have genomic data (RNA-seq or Microarray) with a binary outcome variable.
+-   Have a genomic data (RNA-seq or Microarray) with a binary outcome variable.
 
--   Aim to develop and evaluate Random Forest model's from Python's scikit-learn through our custom R wrapper.
+-   Aim to develop and evaluate Random Forest models from Python's scikit-learn through our custom R wrapper.
 
--   Seek rank-based feature reduction, yielding a list of significant features.
+-   Seek permutation and rank-based feature reduction, yielding a list of significant features.
+
+-   Require a memory efficient way to build Random Forest models on large genomic datasets in R.
 
 Rf2pval offers:
 
--   A final list of reduced features with p-values.
+-   Python scikit-learn's superior Random Forest class balancing, GRIDSearchCV hyperparameter tuning with cross-validation, efficient memory management, sparse-data handling, and parallelization.
+
+-   A final list of reduced features with corresponding p-values for indicating statistical significance.
+
+-   Publication-ready plots to help visualize the feature reduction approach.
 
 -   SHAP values for understanding feature influence on the outcome.
 
 -   Integration with gProfiler for extensive gene set enrichment analysis.
 
+
 For more information and to contribute to the Rf2pval package, please visit the [GitHub repository](https://github.com/tkolisnik/Rf2pval).
+
+## License
+This package is licensed under the [BSD 3-Clause License](https://github.com/tkolisnik/ShinyGEExplorer/blob/main/LICENSE.txt).
+
+This package is an independent project, not officially endorsed or maintained by the creators of scikit-learn. The package includes modified scikit-learn code as allowed by the creators of scikit-learn under their [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause).
 
 # R Package Installation and Setup
 
@@ -366,6 +378,25 @@ print(fitting_results)
 
 # If performance is not adequate, you may want to reconstruct your model, tweak 
 # your data, and rerun step 7 before proceeding.
+
+# If you want to manually assign your parameters you can do so by running this code:
+# Note: you must include an L after all integers (eg 10L) to force them to remain as 
+# integers during the list to python dict conversion. 
+best_params_manual <- list(
+  bootstrap = TRUE,
+  class_weight = NULL,
+  criterion = 'gini',
+  max_depth = 10L, # Keep the L!
+  max_features = 0.2, # Decimal numbers do not need the L
+  min_samples_leaf = 2L, # Keep the L!
+  min_samples_split = 2L, # Keep the L!
+  n_estimators = 100L, # Keep the L!
+  warm_start = FALSE,
+  verbose = TRUE
+)
+
+# Use reticulate to convert the R list to a Python dict.
+new_best_params <- reticulate::dict(best_params_manual)
 ```
 
 ## Testing scoring
@@ -685,8 +716,8 @@ library(gprofiler2)
 
 gprofiler_results <- gprofiler2::gost(query = features_list, # List of gene vectors
                                       organism = "hsapiens", 
-                                      ordered_query = FALSE, 
-                                      user_threshold = 0.5
+                                      ordered_query = TRUE, 
+                                      user_threshold = 0.05
                                       )
 
 # Create gProfiler Manhattan plot

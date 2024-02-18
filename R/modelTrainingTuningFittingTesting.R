@@ -75,12 +75,12 @@ tune_and_train_rf_model <- function(X, y, cv_folds = 5, scoring_method = "roc_au
       bootstrap = list(TRUE),
       class_weight = list(NULL),
       max_depth = list(5L, 10L, 15L, 20L, NULL),
-      n_estimators = as.integer(seq(10, 100, 10)),
+      n_estimators = as.integer(seq(50, 200, 25)),
       max_features = list("sqrt", "log2", 0.1, 0.2),
       criterion = list("gini"),
       warm_start = list(FALSE),
-      min_samples_leaf = list(1L, 2L, 5L, 10L, 20L, 50L),
-      min_samples_split = list(2L, 10L, 20L, 50L, 100L, 200L)
+      min_samples_leaf = list(2L, 3L, 4L, 5L, 10L),
+      min_samples_split = list(2L, 3L, 4L, 5L, 10L)
     )
   }
 
@@ -151,7 +151,8 @@ fit_and_evaluate_rf <- function(best_params, X_train, y_train, X_val = NULL, y_v
     bootstrap = best_params$bootstrap,
     class_weight = best_params$class_weight,
     criterion = best_params$criterion,
-    warm_start = best_params$warm_start
+    warm_start = best_params$warm_start,
+    verbose = TRUE
   )
 
   # Fit the model on the training set
@@ -162,8 +163,39 @@ fit_and_evaluate_rf <- function(best_params, X_train, y_train, X_val = NULL, y_v
     saveRDS(final_model, file = save_path)
   }
 
+  py$final_model <- final_model
+  reticulate::py_run_string("params = final_model.get_params()")
+  all_params <- py$params
+
+  # Helper function for printing full list of model parameters (by default only a few print and it looks misleading)
+  format_model_params <- function(params_list) {
+    params_str <- "RandomForestClassifier("
+    param_lines <- c()
+
+    for (param_name in names(params_list)) {
+      value <- params_list[[param_name]]
+
+      # Handle different value types
+      if (is.logical(value)) {
+        value_str <- ifelse(value, "TRUE", "FALSE")
+      } else if (is.null(value)) {
+        value_str <- "NULL"
+      } else {
+        value_str <- toString(value)
+      }
+
+      param_lines <- c(param_lines, sprintf("%s=%s", param_name, value_str))
+    }
+
+    params_str <- paste0(params_str, paste(param_lines, collapse=", "), ")")
+
+    return(params_str)
+  }
+
+  full_model_parameters <- format_model_params(all_params)
+
   # Initialize an empty list to store results
-  results <- list(model = final_model)
+  results <- list(model = final_model, all_params = full_model_parameters)
 
   # If validation data is provided, compute the metrics on the validation set
   if (!is.null(X_val) && !is.null(y_val)) {
